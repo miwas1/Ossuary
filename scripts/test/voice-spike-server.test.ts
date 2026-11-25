@@ -40,8 +40,8 @@ describe("voice spike server", () => {
     const base = await start();
     const res = await fetch(`${base}/v1/chat/completions`, { method: "POST", body: body(false) });
     const json = await res.json();
-    expect(json.object).toBe("chat.completion");
-    expect(json.choices[0].message.content).toBe(FIXED_REPLY);
+    expect(json).toHaveProperty("object", "chat.completion");
+    expect(json).toHaveProperty("choices.0.message.content", FIXED_REPLY);
   });
 
   it("logs timings and counts, never message content", async () => {
