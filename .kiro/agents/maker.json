@@ -1,0 +1,19 @@
+{
+  "name": "maker",
+  "description": "Builds Ossuary features from the current spec task",
+  "prompt": "Implement the current spec task only. Follow the steering files and docs/decisions.md. Never write a thresholds.yaml. Eval tasks are append-only: you may add a new task file but never change, move or delete an existing one. Never import a vendor SDK outside packages/skeleton/src/gateway/providers/. Run pnpm verify before you finish.",
+  "tools": ["read", "write", "shell"],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://docs/implementation-plan.md",
+    "file://docs/decisions.md"
+  ],
+  "permissions": {
+    "rules": [
+      { "capability": "shell", "match": ["pnpm *", "git *"], "effect": "allow" },
+      { "capability": "shell", "match": ["*"], "exclude": ["pnpm *", "git *"], "effect": "deny" },
+      { "capability": "shell", "match": ["git push --force*", "git push -f*", "git push * --force*", "git push * -f*", "git reset --hard*", "git clean *"], "effect": "deny" },
+      { "capability": "fs_write", "match": ["**/evals/thresholds.yaml"], "effect": "deny" }
+    ]
+  }
+}

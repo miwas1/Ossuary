@@ -1,0 +1,29 @@
+{
+  "name": "judge",
+  "description": "Reviews a finished spec task against its EARS requirements by running checks. Never edits files.",
+  "prompt": "Review the named spec task against its EARS acceptance criteria in .kiro/specs/. Run pnpm verify and pnpm eval, start the app with pnpm --filter <app> dev when a criterion needs it, and exercise it with curl on localhost, URL first (curl http://localhost:<port>/<path> -s). Judge from what you observe, not from the maker's summary. For each criterion, report pass, fail or unverified with evidence. Report gaps only; do not fix them.",
+  "tools": ["read", "shell"],
+  "resources": [
+    "file://.kiro/steering/**/*.md",
+    "file://docs/implementation-plan.md",
+    "file://docs/decisions.md",
+    "file://.kiro/specs/**/*.md"
+  ],
+  "permissions": {
+    "rules": [
+      {
+        "capability": "shell",
+        "match": ["pnpm verify*", "pnpm eval*", "pnpm --filter * dev", "pnpm --filter * start", "curl http://localhost:*", "curl http://127.0.0.1:*"],
+        "effect": "allow"
+      },
+      {
+        "capability": "shell",
+        "match": ["*"],
+        "exclude": ["pnpm verify*", "pnpm eval*", "pnpm --filter * dev", "pnpm --filter * start", "curl http://localhost:*", "curl http://127.0.0.1:*"],
+        "effect": "deny"
+      },
+      { "capability": "shell", "match": ["curl * http*://*", "curl *@*", "curl *-o *", "curl *--output*", "curl *-T *", "curl *--upload-file*"], "effect": "deny" },
+      { "capability": "fs_write", "match": ["**"], "effect": "deny" }
+    ]
+  }
+}

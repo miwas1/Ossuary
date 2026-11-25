@@ -1,0 +1,22 @@
+{
+  "name": "seance",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Séance: live voice mock interviews (CNV-A0-R2). Built in Phase 5.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@ossuary/skeleton": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

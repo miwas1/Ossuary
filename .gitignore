@@ -1,0 +1,20 @@
+# Dependencies and build output
+node_modules/
+dist/
+.next/
+.turbo/
+coverage/
+*.tsbuildinfo
+*.log
+
+# Local environment (keep the example)
+.env
+.env.*
+!.env.example
+
+# Local databases and worktrees
+pgdata/
+.pglite/
+.worktrees/
+
+# .kiro/ is deliberately NOT ignored: steering, specs, hooks and agents are part of the repo.

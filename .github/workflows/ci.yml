@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: pnpm verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify
+
+  db-postgres16:
+    # What the dev machine can't check (D-35): the database tests on a real Postgres 16,
+    # and that docker-compose.yml parses.
+    name: database tests on Postgres 16
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ossuary
+          POSTGRES_PASSWORD: ossuary-ci-only
+          POSTGRES_DB: ossuary_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ossuary -d ossuary_test"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      # Throwaway credentials for the service container above, not a secret.
+      TEST_DATABASE_URL: postgres://ossuary:ossuary-ci-only@localhost:5432/ossuary_test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @ossuary/skeleton test
+      - name: docker-compose.yml parses
+        env:
+          POSTGRES_USER: ossuary
+          POSTGRES_PASSWORD: ci-config-check
+          POSTGRES_DB: ossuary
+        run: docker compose config --quiet

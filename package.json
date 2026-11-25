@@ -1,0 +1,35 @@
+{
+  "name": "ossuary",
+  "private": true,
+  "description": "A lean TypeScript skeleton for AI apps, with Exhume and Séance built on it",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "verify": "pnpm lint:boundaries && turbo run typecheck lint test",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "build": "turbo run build",
+    "lint:boundaries": "tsx scripts/lint-boundaries.ts",
+    "bones": "tsx scripts/bone-count.ts",
+    "thresholds:check": "tsx scripts/check-thresholds.ts",
+    "eval": "node scripts/not-built-yet.mjs \"pnpm eval\" 2",
+    "db:migrate": "pnpm --filter @ossuary/skeleton db:migrate",
+    "db:generate": "pnpm --filter @ossuary/skeleton db:generate",
+    "spike:voice": "tsx scripts/voice-spike-server.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "globals": "catalog:",
+    "tsx": "catalog:",
+    "turbo": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  }
+}

@@ -1,0 +1,11 @@
+# models.yaml (repo root): the only file with model IDs and prices (MODEL-07).
+# Tiers follow the framework's volatile defaults register.
+# Fill in the fallback IDs from each vendor's docs on the day you build (plan §5).
+tiers:
+  small:    { primary: "anthropic:claude-haiku-5-5",  fallback: "google:<id>" }
+  mid:      { primary: "anthropic:claude-sonnet-5-5", fallback: "openai:<id>" }   # Opus 5.5 is also a mid-tier candidate
+  frontier: { primary: "anthropic:claude-fable-5-2",  fallback: "google:<id>" }
+
+# Per million tokens, per model ID, copied from vendor pages with the date, for example:
+#   "anthropic:<id>": { input: 0.00, cached_input: 0.00, output: 0.00, currency: USD, source: "<vendor pricing URL>", checked: 2026-11-25 }
+prices: {}

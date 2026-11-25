@@ -1,0 +1,22 @@
+{
+  "name": "exhume",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Exhume: receipts to a naira ledger (EXT-A2-R2). Built in Phase 4.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@ossuary/skeleton": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

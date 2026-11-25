@@ -1,0 +1,19 @@
+{
+  "name": "create-ossuary",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Creates a new Ossuary app from a product code (Phase 6, stretch)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

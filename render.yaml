@@ -1,0 +1,42 @@
+# Render Blueprint (stub). Phases 4 and 5 finish it when the apps exist.
+# Check field names against Render's Blueprint spec before the first deploy (plan §12).
+services:
+  - type: web
+    name: ossuary-exhume
+    runtime: node
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo build --filter=exhume
+    startCommand: pnpm --filter exhume start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ossuary-db, property: connectionString }
+      - fromGroup: ossuary-keys
+  - type: web
+    name: ossuary-seance
+    runtime: node
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm turbo build --filter=seance
+    startCommand: pnpm --filter seance start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ossuary-db, property: connectionString }
+      - fromGroup: ossuary-keys
+
+databases:
+  - name: ossuary-db
+    postgresMajorVersion: "16"   # matches the CI service container (D-35)
+
+envVarGroups:
+  - name: ossuary-keys
+    envVars:
+      - { key: ANTHROPIC_API_KEY, sync: false }
+      - { key: OPENAI_API_KEY, sync: false }
+      - { key: GOOGLE_API_KEY, sync: false }
+      - { key: ELEVENLABS_API_KEY, sync: false }
+      - { key: ELEVENLABS_AGENT_ID, sync: false }
+      - { key: VOICE_LLM_SECRET, sync: false }
+      - { key: BLOB_ENDPOINT, sync: false }
+      - { key: BLOB_BUCKET, sync: false }
+      - { key: BLOB_KEY, sync: false }
+      - { key: BLOB_SECRET, sync: false }
+      - { key: OSSUARY_MCP_KEY, sync: false }
+      - { key: DAILY_SPEND_CAP_USD, sync: false }
+      - { key: DEMO_MODE, value: "true" }
