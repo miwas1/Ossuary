@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "exhume": {
+      "url": "http://localhost:3001/api/mcp",
+      "headers": { "Authorization": "Bearer ${OSSUARY_MCP_KEY}" },
+      "disabled": true
+    },
+    "seance": {
+      "url": "http://localhost:3002/api/mcp",
+      "headers": { "Authorization": "Bearer ${OSSUARY_MCP_KEY}" },
+      "disabled": true
+    }
+  }
+}

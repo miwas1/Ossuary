@@ -191,7 +191,7 @@ Each acceptance criterion is written in EARS and tagged in brackets with the fra
 
 1. THE Repo SHALL contain the ten steering files of plan §9 in `.kiro/steering/`, with the inclusion modes of that table: `product.md`, `tech.md` and `structure.md` always; `ui.md` on `**/*.tsx`; `security.md` on `packages/skeleton/src/guard/**`, `apps/*/src/domain/**` and `**/tools/**`; `evals.md` on `**/evals/**`; `archetype-ext.md` on `apps/exhume/**`; `archetype-cnv.md` on `apps/seance/**`; `plan.md` and `framework.md` manual. [Plan §9]
 2. THE `product.md` file SHALL state what Ossuary is, the two apps, the judging criteria, the four house rules of plan §1, and a fifth house rule: where `docs/decisions.md` differs from the plan, `docs/decisions.md` wins. [Plan §1, Plan §9, D-01]
-3. THE `plan.md` file SHALL contain only its front matter and `#[[file:docs/implementation-plan.md]]`, and THE `framework.md` file SHALL contain only its front matter and `#[[file:docs/framework-spec.md]]`. [Plan §9]
+3. THE `plan.md` file SHALL include the build phases excerpt and point to the full implementation plan and decisions. THE `framework.md` file SHALL include the purpose and core principles excerpt and point to the full framework specification. Both SHALL use manual inclusion. [Plan §9, D-41]
 4. THE other steering files SHALL hold the content the plan §9 table assigns them. `archetype-ext.md` and `archetype-cnv.md` SHALL omit the `#[[file:apps/<app>/product.yaml]]` reference until Phases 4 and 5 create those files. [Plan §9, D-04]
 5. THE steering files SHALL NOT contain model IDs or prices. [MODEL-07]
 

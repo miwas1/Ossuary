@@ -100,9 +100,9 @@ Each entry gives the decision, the reason, and the plan section it overrides, if
 - Status: approved.
 - Decision: `Copyright (c) 2026 <NAME>`.
 
-### D-20 You create .kiro/settings/mcp.json
+### D-20 Create .kiro/settings/mcp.json outside Kiro
 - Status: approved (design round).
-- Decision: Kiro hard-denies agent writes under `.kiro/settings/` ([Kiro permissions docs](https://kiro.dev/docs/permissions/)). You create the file from the content in `.kiro/specs/00-foundations/design.md`.
+- Decision: Kiro restricts agent writes under `.kiro/settings/`. Codex populated the file from the Phase 0 design and enabled the repository test for the required localhost URLs, disabled flags and environment reference. [Kiro permissions docs](https://kiro.dev/docs/permissions/)
 
 ### D-21 The ElevenLabs server SDK is blocked everywhere
 - Status: approved (design round).
@@ -208,6 +208,12 @@ Each entry gives the decision, the reason, and the plan section it overrides, if
 - Decision: the five hooks were created with Kiro's hook tool as v1 JSON in `.kiro/hooks/`. Kiro loads them at the next session start, so they can't fire in the session that created them. The real payload capture (task 12.2) and the hook-fires-on-save check (task 12.1) therefore run in a fresh session.
 - Two temporary hooks, `capture-pretooluse.json` and `capture-postfilesave.json`, save payloads to `/tmp/ossuary-hook-capture` with `scripts/capture-hook-payload.mjs`. The guard hook itself stays unchanged. Both temporary hooks are deleted once the fixtures are saved.
 
+### D-41 Manual steering inlines excerpts
+
+- Decision: keep manual inclusion for `plan.md` and `framework.md`. Inline the build phases and the framework’s opening sections respectively, and direct Kiro to read the full source documents for the task at hand.
+- Reason: Kiro IDE 1.5.44 showed “Reference cut short” for both whole-document references in the workspace steering panel.
+- Overrides: the two whole-document references in plan §9.
+
 ## Forward notes for later phases
 
 - Phase 1: decide the public `db` export (`createDb`, `migrateDb`) from `src/index.ts`.
@@ -290,6 +296,4 @@ Local check, no tunnel (25 Nov 2026): the stub answered a streamed request with 
 
 `{"method":"POST","path":"/v1/chat/completions","status":200,"stream":true,"messages":1,"first_byte_ms":2.7,"first_content_ms":3.1,"last_byte_ms":4.6}`
 
-ElevenLabs through a tunnel (p50 and p95, end of speech to first audio, 10 or more turns): to be measured by you.
-
-To be measured by you with an ElevenLabs agent through a tunnel.
+ElevenLabs through a tunnel (p50 and p95, end of speech to first audio, 10 or more turns): pending a live ElevenLabs session.

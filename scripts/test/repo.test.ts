@@ -76,9 +76,15 @@ describe("Kiro layer", () => {
     expect(parse(m![1]!)).toEqual(expected);
   });
 
-  it("manual steering files hold only their file reference", () => {
-    expect(read(".kiro/steering/plan.md").replace(/^---[\s\S]*?---\n/, "").trim()).toBe("#[[file:docs/implementation-plan.md]]");
-    expect(read(".kiro/steering/framework.md").replace(/^---[\s\S]*?---\n/, "").trim()).toBe("#[[file:docs/framework-spec.md]]");
+  it("manual steering points to the intended excerpts and full source documents", () => {
+    const plan = read(".kiro/steering/plan.md");
+    const framework = read(".kiro/steering/framework.md");
+    expect(plan).toContain("#[[file:docs/implementation-plan.md:539-558]]");
+    expect(plan).toContain("`docs/implementation-plan.md`");
+    expect(read("docs/implementation-plan.md").split("\n")[538]).toBe("## 10. Build phases");
+    expect(framework).toContain("#[[file:docs/framework-spec.md:1-42]]");
+    expect(framework).toContain("`docs/framework-spec.md`");
+    expect(read("docs/framework-spec.md").split("\n").slice(0, 42)).toContain("## 2. Core principles");
   });
 
   it("product.md carries the five house rules", () => {
@@ -118,8 +124,8 @@ describe("Kiro layer", () => {
   });
 
   it("MCP settings point at both apps, read the key from the environment, and start disabled", () => {
-    if (!exists(".kiro/settings/mcp.json") || read(".kiro/settings/mcp.json").trim() === "") return; // you create this file (D-20)
     const cfg = JSON.parse(read(".kiro/settings/mcp.json")) as { mcpServers: Record<string, { url: string; headers: Record<string, string>; disabled?: boolean }> };
+    expect(Object.keys(cfg.mcpServers).sort()).toEqual(["exhume", "seance"]);
     expect(cfg.mcpServers.exhume?.url).toBe("http://localhost:3001/api/mcp");
     expect(cfg.mcpServers.seance?.url).toBe("http://localhost:3002/api/mcp");
     for (const s of Object.values(cfg.mcpServers)) {

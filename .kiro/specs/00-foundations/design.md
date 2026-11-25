@@ -385,8 +385,8 @@ To use it with ElevenLabs, set the agent's Custom LLM server URL to `https://<tu
 | `evals.md` | `fileMatch`, `["**/evals/**"]` | Task file format (Phase 2 fills in details); the `thresholds.yaml` min/max format; grade outcomes, not paths; never edit thresholds to make a run pass, and how the guard and the PR check enforce that |
 | `archetype-ext.md` | `fileMatch`, `["apps/exhume/**"]` | The plan §9 example, minus the `product.yaml` link (D-04) |
 | `archetype-cnv.md` | `fileMatch`, `["apps/seance/**"]` | The CNV split, latency budget, AI disclosure on the first turn, interruption; no `product.yaml` link (D-04) |
-| `plan.md` | `inclusion: manual` | `#[[file:docs/implementation-plan.md]]` |
-| `framework.md` | `inclusion: manual` | `#[[file:docs/framework-spec.md]]` |
+| `plan.md` | `inclusion: manual` | Build phases excerpt, with pointers to the full plan and decisions (D-41) |
+| `framework.md` | `inclusion: manual` | Purpose and core principles excerpt, with a pointer to the full specification (D-41) |
 
 ### Hooks (`.kiro/hooks/`)
 

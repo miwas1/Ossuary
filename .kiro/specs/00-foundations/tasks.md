@@ -110,14 +110,14 @@ No task runs a docker command on this machine (D-35). Hooks are created after th
   - [x] 10.3 Add a test that greps the repo for model IDs and prices outside `models.yaml` and `docs/`, so MODEL-07 is checked on every run.
     - _Requirements: 16.3, 12.5, 14.3_
 
-- [ ] 11. Kiro layer (you'll approve each write under `.kiro/hooks` and `.kiro/agents`, as Kiro always asks for those)
+- [x] 11. Kiro layer
   - [x] 11.1 Write the ten steering files with the plan §9 front matter. `product.md` carries house rule 5. `evals.md` documents the min/max format, append-only tasks, and one task per YAML file under `evals/tasks/<set>/` (updated Prompt 2). The archetype files leave out the `product.yaml` link.
     - _Requirements: 12.1–12.5_
   - [x] 11.2 Create the five hooks as v1 JSON. `eval-on-save` calls the `pnpm eval` placeholder. `guard-thresholds` uses the tool-ID regex matcher.
     - _Requirements: 13.1–13.7_
   - [x] 11.3 Write `maker.json` and `judge.json` from the design (no `model` field).
     - _Requirements: 14.1–14.3_
-  - [ ] 11.4 You paste the design's `mcp.json` content into `.kiro/settings/mcp.json`. The file exists but is empty, and Kiro won't let the agent write there. I then check it parses and has no literal key.
+  - [x] 11.4 Populate `.kiro/settings/mcp.json` from the design. Verify both local servers are disabled and the authorization headers use the environment reference.
     - _Requirements: 15.1–15.3_
   - [x] 11.5 Write the `docs/kiro-log.md` headings.
     - _Requirements: 19.2_
@@ -129,15 +129,20 @@ No task runs a docker command on this machine (D-35). Hooks are created after th
     - _Requirements: 9.12, 9.13_
   - [x] 12.3 Spike server runs locally: start `pnpm spike:voice`, `curl` both modes, and paste a timing line into decisions.md.
     - _Requirements: 20.8_
-  - [ ] 12.4 You confirm the ten steering files show in Kiro's steering panel.
+  - [x] 12.4 You confirm the ten steering files show in Kiro's steering panel.
+    - The workspace screenshot shows all ten. Kiro reported “Reference cut short” on the two manual entries. D-41 records the switch to shorter excerpts.
     - _Requirements: 12.1_
   - [ ] 12.5 Git and CI:
     - First commit on `main`.
     - Once you give the remote URL and authenticate `gh`: add the remote, push, and create the `thresholds-change` label.
     - Watch both CI jobs go green. Open a throwaway PR that lowers a planted `{ min }` to see the threshold check fail, then close it and delete the branch.
+    - Both CI jobs passed for `c46bee5` in [CI run 45701490079](https://github.com/miwas1/Ossuary/actions/runs/45701490079).
+    - In a temporary local Git repo, lowering `{ min: 0.90 }` to `{ min: 0.80 }` failed the threshold check without the label and passed with it. The GitHub label and test PR are pending.
     - _Requirements: 10.1–10.4, 11.4_
-  - [ ] 12.6 Final `pnpm verify`. Write the three Phase 0 lines in `kiro-log.md`, and list anything in the plan I couldn't do or think is wrong.
+  - [x] 12.6 Run `pnpm verify`, update the Phase 0 log, and record outstanding exit checks.
+    - On Node 24: 91 passed, one skipped pending the real Kiro fixture in task 12.2.
     - _Requirements: 6.3, 19.2_
+  - [ ] 12.7 Run the Kiro `judge` review and record its findings before closing the phase.
 
 ## Departures from the plan in this stage
 
