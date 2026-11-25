@@ -203,6 +203,11 @@ Each entry gives the decision, the reason, and the plan section it overrides, if
 - Node: nvm's default stays 24, matching the repo pin. Hooks run in a fresh shell on the default Node.
 - gh CLI: not installed. You create the `thresholds-change` label in the GitHub UI and watch CI there.
 
+### D-40 Hooks load at session start; payload capture runs in the next session
+- Status: approved (task 11.2).
+- Decision: the five hooks were created with Kiro's hook tool as v1 JSON in `.kiro/hooks/`. Kiro loads them at the next session start, so they can't fire in the session that created them. The real payload capture (task 12.2) and the hook-fires-on-save check (task 12.1) therefore run in a fresh session.
+- Two temporary hooks, `capture-pretooluse.json` and `capture-postfilesave.json`, save payloads to `/tmp/ossuary-hook-capture` with `scripts/capture-hook-payload.mjs`. The guard hook itself stays unchanged. Both temporary hooks are deleted once the fixtures are saved.
+
 ## Forward notes for later phases
 
 - Phase 1: decide the public `db` export (`createDb`, `migrateDb`) from `src/index.ts`.
@@ -277,8 +282,14 @@ Each line is JSON: `{at, method, path, status, stream, messages, first_byte_ms, 
 
 ## Hook payload shape
 
-Filled in by the payload capture task (D-06).
+Filled in by the payload capture task (D-06, D-40) in the next Kiro session. Until then the guard assumes the shape in Kiro's hook docs: `{ hook_event_name, cwd, session_id, tool_name, tool_input }` on stdin, with exit 2 blocking the call.
 
 ## Voice spike latency
+
+Local check, no tunnel (25 Nov 2026): the stub answered a streamed request with first byte at 2.7 ms, first content at 3.1 ms and last byte at 4.6 ms, so the server adds almost nothing to the voice path.
+
+`{"method":"POST","path":"/v1/chat/completions","status":200,"stream":true,"messages":1,"first_byte_ms":2.7,"first_content_ms":3.1,"last_byte_ms":4.6}`
+
+ElevenLabs through a tunnel (p50 and p95, end of speech to first audio, 10 or more turns): to be measured by you.
 
 To be measured by you with an ElevenLabs agent through a tunnel.

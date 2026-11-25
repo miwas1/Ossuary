@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "eval-on-save",
+      "trigger": "PostFileSave",
+      "description": "Re-run regression and safety evals when prompts, Skills, routing or models change (EVAL-06)",
+      "matcher": "apps/.*/(prompts|skills)/|routing\\.yaml$|models\\.yaml$",
+      "action": {
+        "type": "command",
+        "command": "pnpm eval --changed --sets regression,safety",
+        "timeout": 300
+      }
+    }
+  ]
+}

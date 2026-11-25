@@ -34,9 +34,12 @@ describe("repo layout", () => {
 
   it("does not ignore .kiro/", () => {
     expect(read(".gitignore")).not.toMatch(/^\s*\/?\.kiro/m);
-    const r = spawnSync("git", ["check-ignore", "-q", ".kiro/steering/product.md", ".kiro/hooks/x.json", ".kiro/specs/00-foundations/tasks.md"], { cwd: root });
-    if (r.error) return; // git not available: the .gitignore text check above still applies
-    expect(r.status, "git check-ignore matched a .kiro path").toBe(1);
+    // git check-ignore exits 0 when the path is ignored, 1 when it isn't; -q takes one path at a time.
+    for (const p of [".kiro/steering/product.md", ".kiro/hooks/x.json", ".kiro/specs/00-foundations/tasks.md", ".kiro/settings/mcp.json"]) {
+      const r = spawnSync("git", ["check-ignore", "-q", "--no-index", p], { cwd: root });
+      if (r.error) return; // git not available: the .gitignore text check above still applies
+      expect(r.status, `git check-ignore matched ${p}`).toBe(1);
+    }
   });
 
   it("exposes the skeleton only through its entry point", () => {

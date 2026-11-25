@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "capture-pretooluse (temporary)",
+      "trigger": "PreToolUse",
+      "description": "Temporary for task 12.2: save PreToolUse payloads to /tmp/ossuary-hook-capture. Delete after the capture.",
+      "matcher": "write|append|replace",
+      "action": {
+        "type": "command",
+        "command": "node scripts/capture-hook-payload.mjs /tmp/ossuary-hook-capture",
+        "timeout": 10
+      }
+    }
+  ]
+}

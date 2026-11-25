@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "capture-postfilesave (temporary)",
+      "trigger": "PostFileSave",
+      "description": "Temporary for task 12.2: save PostFileSave payloads to /tmp/ossuary-hook-capture. Delete after the capture.",
+      "matcher": "\\.(ts|tsx)$",
+      "action": {
+        "type": "command",
+        "command": "node scripts/capture-hook-payload.mjs /tmp/ossuary-hook-capture",
+        "timeout": 10
+      }
+    }
+  ]
+}

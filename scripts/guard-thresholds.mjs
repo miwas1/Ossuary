@@ -498,9 +498,8 @@ function capture(dir, stdinText) {
 }
 
 function main() {
-  let stdinText = "";
   try {
-    stdinText = fs.readFileSync(0, "utf8");
+    const stdinText = fs.readFileSync(0, "utf8");
     const capIdx = process.argv.indexOf("--capture");
     if (capIdx !== -1 && process.argv[capIdx + 1]) capture(/** @type {string} */ (process.argv[capIdx + 1]), stdinText);
     const { exit, reasons } = decide(stdinText);

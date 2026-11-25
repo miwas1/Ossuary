@@ -9,6 +9,11 @@ Built for Kiroween 2026, Skeleton Crew category.
 How much of each app is its own code, next to the shared skeleton. `pnpm bones` rewrites this table.
 
 <!-- bones:start -->
+| Package | Bone lines | App-specific share |
+| --- | ---: | ---: |
+| @ossuary/skeleton | 93 | — |
+| exhume | 1 | 1% |
+| seance | 1 | 1% |
 <!-- bones:end -->
 
 ## Quick start

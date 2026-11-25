@@ -32,7 +32,7 @@ describe("volatile register", () => {
 
   it("models.yaml has the three tiers and an empty prices block", () => {
     const text = fs.readFileSync(path.join(root, "models.yaml"), "utf8");
-    for (const tier of ["small", "mid", "frontier"]) expect(text).toMatch(new RegExp(`^\\s+${tier}:\\s+\\{ primary: "[a-z]+:[^"]+", fallback: "[a-z]+:[^"]+" \\}`, "m"));
+    for (const tier of ["small", "mid", "frontier"]) expect(text).toMatch(new RegExp(`^\\s+${tier}:\\s+\\{\\s*primary: "[a-z]+:[^"]+",\\s*fallback: "[a-z]+:[^"]+"\\s*\\}`, "m"));
     expect(text).toMatch(/^prices: \{\}/m);
   });
 });

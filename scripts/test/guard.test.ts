@@ -11,13 +11,13 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const GUARD = path.resolve(here, "../guard-thresholds.mjs");
 const FIXTURES = path.resolve(here, "fixtures/hook-payloads");
 
-let repo: string;
+// Created when the module loads, so the case table below can use absolute paths.
+const repo = fs.mkdtempSync(path.join(os.tmpdir(), "guard-"));
 const TH = "apps/exhume/evals/thresholds.yaml";
 const TASK = "apps/exhume/evals/tasks/core/r001.yaml";
 const NEW_TASK = "apps/exhume/evals/tasks/core/r999.yaml";
 
 beforeAll(() => {
-  repo = fs.mkdtempSync(path.join(os.tmpdir(), "guard-"));
   fs.mkdirSync(path.join(repo, "apps/exhume/evals/tasks/core"), { recursive: true });
   fs.writeFileSync(path.join(repo, TH), "core_pass_k3: { min: 0.85 }\n");
   fs.writeFileSync(path.join(repo, TASK), "id: r001\n");

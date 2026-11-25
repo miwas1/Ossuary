@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "no-vendor-sdk",
+      "trigger": "PostFileSave",
+      "description": "Block vendor SDK imports outside gateway/providers and app imports of skeleton internals (MODEL-01, ARCH-02)",
+      "matcher": "\\.(ts|tsx)$",
+      "action": {
+        "type": "command",
+        "command": "pnpm lint:boundaries",
+        "timeout": 60
+      }
+    }
+  ]
+}

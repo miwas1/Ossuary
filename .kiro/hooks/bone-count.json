@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "bone-count",
+      "trigger": "PostFileSave",
+      "description": "Recount skeleton and app lines and rewrite the README table between the bones markers",
+      "matcher": "\\.(ts|tsx)$",
+      "action": {
+        "type": "command",
+        "command": "pnpm bones",
+        "timeout": 60
+      }
+    }
+  ]
+}

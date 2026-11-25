@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "record-on-stop",
+      "trigger": "Stop",
+      "description": "Record model, prompt, routing and harness changes in CHANGELOG.md (framework 15.1 step 6, HAR-04)",
+      "action": {
+        "type": "agent",
+        "prompt": "If this turn changed anything under apps/*/prompts/, apps/*/skills/, a routing.yaml, models.yaml or packages/skeleton/src/harness/, append an entry to CHANGELOG.md under today's date. The entry gives what changed, the eval deltas (or 'evals not run'), the cost change and any harness components removed. Otherwise do nothing."
+      }
+    }
+  ]
+}

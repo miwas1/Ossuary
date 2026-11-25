@@ -1,0 +1,16 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "guard-thresholds",
+      "trigger": "PreToolUse",
+      "description": "Block writes to evals/thresholds.yaml and any change, move or delete of existing eval tasks (framework 3.4, EVAL-08, D-05, D-32)",
+      "matcher": "write|append|replace|delete|relocate|rename|move|bash|shell|exec",
+      "action": {
+        "type": "command",
+        "command": "node scripts/guard-thresholds.mjs",
+        "timeout": 30
+      }
+    }
+  ]
+}
