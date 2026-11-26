@@ -78,10 +78,10 @@ Ground rules for every task:
     Test on PGlite: nesting, IDs, root attributes, a planted email gone from the stored row, and a failing insert that lets the task go on.
     - _Requirements: 22.1, 22.2, 22.7, 22.8, 22.9_
 
-- [ ] 8. Gateway: I/O
-  - [ ] 8.1 Write `src/gateway/spend.ts`: the conditional insert-or-update Reservation, settlement and release on `bones.spend`. Test the cap boundary, release, settlement above the Reservation, and 10 parallel Reservations against one cap on PGlite that never take the total above it.
+- [x] 8. Gateway: I/O
+  - [x] 8.1 Write `src/gateway/spend.ts`: the conditional insert-or-update Reservation, settlement and release on `bones.spend`. Test the cap boundary, release, settlement above the Reservation, and 10 parallel Reservations against one cap on PGlite that never take the total above it.
     - _Requirements: 13.3, 13.4, 13.5, 13.6_
-  - [ ] 8.2 Write `src/gateway/gateway.ts` with `createGateway` and the scoped gateway:
+  - [x] 8.2 Write `src/gateway/gateway.ts` with `createGateway` and the scoped gateway:
     - provider registry check;
     - step-name check;
     - assemble → estimate → plan;
@@ -94,11 +94,11 @@ Ground rules for every task:
 
     Unit-test each criterion the properties don't cover.
     - _Requirements: 9.7, 11.2, 11.3, 11.4, 12.2, 12.4, 12.6 to 12.10, 13.1, 13.2, 13.7, 14.1 to 14.10, 15.1 to 15.4, 16.5, 16.7, 22.3, 22.4, D-66, D-70_
-  - [ ] 8.3 Property test 5: a Primary failure returns the Fallback's complete result or a typed error, never a partial result. There is at most one switch and at most one retry per vendor, waits stay within the Retry wait, and the span records the fallback and its reason.
+  - [x] 8.3 Property test 5: a Primary failure returns the Fallback's complete result or a typed error, never a partial result. There is at most one switch and at most one retry per vendor, waits stay within the Retry wait, and the span records the fallback and its reason.
     - _Requirements: 14.11_
-  - [ ] 8.4 Write `src/gateway/providers/classify.ts` with the failure classes and `Retry-After` parsing (seconds, HTTP date, the vendor's millisecond variant, missing, garbage). Unit-test each case.
+  - [x] 8.4 Write `src/gateway/providers/classify.ts` with the failure classes and `Retry-After` parsing (seconds, HTTP date, the vendor's millisecond variant, missing, garbage). Unit-test each case.
     - _Requirements: 9.1, D-70_
-  - [ ] 8.5 Write `src/gateway/providers/anthropic.ts`:
+  - [x] 8.5 Write `src/gateway/providers/anthropic.ts`:
     - a pure `buildRequest` in the Vendor cache order, with tools first and a 5-minute `cache_control` on the Stable prefix's last block;
     - `output_config.effort` and `max_tokens`;
     - a pure `readUsage` that sums the three input counts;
@@ -107,7 +107,7 @@ Ground rules for every task:
 
     Write mapping tests with the SDK's HTTP layer stubbed. If the installed SDK's types lack a field, pass it through extra body with a comment.
     - _Requirements: 9.2 to 9.6, 9.8, 9.9, D-65_
-  - [ ] 8.6 Write `src/gateway/providers/openai.ts`:
+  - [x] 8.6 Write `src/gateway/providers/openai.ts`:
     - a pure `buildRequest` with tools first, then the first `developer` message, never `instructions` (D-69);
     - `prompt_cache_options: { mode: "explicit", ttl: "30m" }` and a breakpoint on the Stable prefix's last block;
     - `reasoning.effort` and `max_output_tokens`;
@@ -117,13 +117,13 @@ Ground rules for every task:
 
     Write mapping tests with the HTTP layer stubbed.
     - _Requirements: 9.2 to 9.6, 9.8, 9.9, D-65, D-69_
-  - [ ] 8.7 Property test 6: each adapter's request body follows its Vendor cache order. Each item appears once, the breakpoint ends the Stable prefix, and requests that differ only in the turn give byte-identical Stable prefixes.
+  - [x] 8.7 Property test 6: each adapter's request body follows its Vendor cache order. Each item appears once, the breakpoint ends the Stable prefix, and requests that differ only in the turn give byte-identical Stable prefixes.
     - _Requirements: 10.4_
-  - [ ] 8.8 Write `src/gateway/fixtures/token-corpus.ts`, covering every text kind of 25.5 with no model names. Commit an empty `fixtures/token-counts.json` (`[]`). Write `src/gateway/calibration.ts` with `estimateCalibration()`.
+  - [x] 8.8 Write `src/gateway/fixtures/token-corpus.ts`, covering every text kind of 25.5 with no model names. Commit an empty `fixtures/token-counts.json` (`[]`). Write `src/gateway/calibration.ts` with `estimateCalibration()`.
     - _Requirements: 12.14, 24.6, 25.5, D-71_
-  - [ ] 8.9 Property test P1-5: the estimate never undercounts a recorded count. With no recordings, register a skipped test titled `P1-5 not calibrated: …` and print the same line. With some, run on them and print `P1-5 partly calibrated: missing …`.
+  - [x] 8.9 Property test P1-5: the estimate never undercounts a recorded count. With no recordings, register a skipped test titled `P1-5 not calibrated: …` and print the same line. With some, run on them and print `P1-5 partly calibrated: missing …`.
     - _Requirements: 12.11, 12.12, 12.13, 24.7_
-  - [ ] 8.10 Write `src/gateway/providers/vendors.smoke.ts`:
+  - [x] 8.10 Write `src/gateway/providers/vendors.smoke.ts`:
     - load the root `.env`, and skip with the `OSSUARY_SMOKE` message unless it is `1`;
     - per vendor with a key: one check call (32-token cap, lowest-output-price tier model), then a recording over the corpus that replaces only that vendor's fixture entries;
     - print the calibration status, and skip a vendor without a key with a line naming its variable.
