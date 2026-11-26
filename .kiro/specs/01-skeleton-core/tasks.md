@@ -61,10 +61,10 @@ Ground rules for every task:
   - [x] 5.6 Write `src/gateway/fake.ts` with `createFakeProvider` (all six outcome kinds, request recording, token-count fixture replay, `fake:` IDs only) and `fakeModelRegister()`.
     - _Requirements: 24.1, 24.2, 24.3, 24.5, D-50, D-64_
 
-- [ ] 6. Database
-  - [ ] 6.1 Write the eight `bones` tables in `src/db/schema.ts` with `pgSchema("bones")`, `bigint` money and `timestamptz` times. Run `pnpm db:generate` to create migration 0001, and check that `0000_init.sql` is byte-for-byte unchanged.
+- [x] 6. Database
+  - [x] 6.1 Write the eight `bones` tables in `src/db/schema.ts` with `pgSchema("bones")`, `bigint` money and `timestamptz` times. Run `pnpm db:generate` to create migration 0001, and check that `0000_init.sql` is byte-for-byte unchanged.
     - _Requirements: 21.1, 21.2, 21.3_
-  - [ ] 6.2 Update `src/db/migrate.test.ts`. Replace the "exactly one migration" case with "0000 unchanged, 0001 present", and check that all eight tables exist after migrating, on PGlite and on `TEST_DATABASE_URL`.
+  - [x] 6.2 Update `src/db/migrate.test.ts`. Replace the "exactly one migration" case with "0000 unchanged, 0001 present", and check that all eight tables exist after migrating, on PGlite and on `TEST_DATABASE_URL`.
     - _Requirements: 21.4_
 
 - [ ] 7. Trace: spans

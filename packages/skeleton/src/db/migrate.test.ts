@@ -6,6 +6,7 @@ import path from "node:path";
 import { sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { createDb, type DbHandle } from "./client.ts";
+import { BONES_TABLES } from "./schema.ts";
 
 const journal = JSON.parse(fs.readFileSync(new URL("./migrations/meta/_journal.json", import.meta.url), "utf8")) as {
   entries: unknown[];
@@ -27,6 +28,8 @@ describe.each(targets)("migrations on %s", (_name, url) => {
       expect(await applied(h)).toBe(journal.entries.length);
       await h.migrate();
       expect(await applied(h)).toBe(journal.entries.length);
+      const rows = await h.execute(sql`select table_name from information_schema.tables where table_schema = 'bones' order by table_name`);
+      expect(rows.map((r) => r.table_name)).toEqual([...BONES_TABLES].sort());
     } finally {
       await h.close();
     }
@@ -55,8 +58,12 @@ describe("createDb", () => {
     expect((err as Error).message).not.toMatch(/hunter2/);
   });
 
-  it("starts with exactly one migration, numbered 0000", () => {
-    expect(journal.entries).toHaveLength(1);
-    expect(fs.readdirSync(new URL("./migrations", import.meta.url)).filter((f) => f.endsWith(".sql"))).toEqual(["0000_init.sql"]);
+  it("keeps migration 0000 unchanged and adds the bones schema as 0001 (Requirement 21.2)", () => {
+    const files = fs.readdirSync(new URL("./migrations", import.meta.url)).filter((f) => f.endsWith(".sql")).sort();
+    expect(files).toHaveLength(2);
+    expect(files[0]).toBe("0000_init.sql");
+    expect(files[1]).toMatch(/^0001_.*\.sql$/);
+    expect(fs.readFileSync(new URL("./migrations/0000_init.sql", import.meta.url), "utf8").trim()).toBe("-- Custom SQL migration file, put your code below! --");
+    expect(journal.entries).toHaveLength(2);
   });
 });
