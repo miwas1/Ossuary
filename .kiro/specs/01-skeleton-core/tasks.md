@@ -27,16 +27,16 @@ Ground rules for every task:
   - [x] 2.3 Write `src/money.ts` with `picoPerToken`, `ceilDiv`, `costMicros` and `capMicros`. Unit-test 0.125, 0.01, 0.57 (gives 570,000), a seven-decimal price (rejected), and a cost that rounds up by one micro-dollar.
     - _Requirements: 12.1, 12.3, 21.3, D-46, D-62_
 
-- [ ] 3. Manifest
-  - [ ] 3.1 Write `src/manifest/schemas.ts`: the product, routing and model schemas, strict objects throughout. Routing takes `timeout_ms`, `max_output_tokens` and `max_retry_wait_ms` with their ranges. Prices take optional `cache_write_input`, `max_prompt_tokens` and `image_input_tokens`. Add a formatter that turns Zod issues into `path: problem` lines. Unit-test a missing field, a wrong type, an unknown key, each out-of-range number and a bad Model ID.
+- [x] 3. Manifest
+  - [x] 3.1 Write `src/manifest/schemas.ts`: the product, routing and model schemas, strict objects throughout. Routing takes `timeout_ms`, `max_output_tokens` and `max_retry_wait_ms` with their ranges. Prices take optional `cache_write_input`, `max_prompt_tokens` and `image_input_tokens`. Add a formatter that turns Zod issues into `path: problem` lines. Unit-test a missing field, a wrong type, an unknown key, each out-of-range number and a bad Model ID.
     - _Requirements: 2.2, 2.3, 2.4, 3.1 to 3.4, 3.7, 4.1, 4.5, D-58, D-59, D-70_
-  - [ ] 3.2 Write `src/manifest/policy.ts`: the three tables as data and `resolvePolicy(code, override?)`. Unit-test an invalid part of each kind, R4 (`restricted`), A0 (`targetRequired`), A4 (`longRuns: 10`), a below-default override, a wrong measure and deep freezing.
+  - [x] 3.2 Write `src/manifest/policy.ts`: the three tables as data and `resolvePolicy(code, override?)`. Unit-test an invalid part of each kind, R4 (`restricted`), A0 (`targetRequired`), A4 (`longRuns: 10`), a below-default override, a wrong measure and deep freezing.
     - _Requirements: 5.1 to 5.4, 6.1 to 6.3, 7.1, 7.2, 8.2 to 8.4, D-42, D-43, D-44_
-  - [ ] 3.3 Property test 1: no accepted override ever lowers a resolved threshold.
+  - [x] 3.3 Property test 1: no accepted override ever lowers a resolved threshold.
     - _Requirements: 8.5_
-  - [ ] 3.4 Property test P1-1: each part of the code drives only its own Policy fields.
+  - [x] 3.4 Property test P1-1: each part of the code drives only its own Policy fields.
     - _Requirements: 5.5_
-  - [ ] 3.5 Write `src/manifest/load.ts` with `loadProduct(appDir, { models? })`. It finds the repo root and reads the three files, with YAML syntax errors reported by line and column. It then runs the cross-field checks (Primary is a placeholder, same-vendor Fallback, missing price), the `THREATS.md` check and the A0 threshold check, and deep-freezes the result. Test it with temporary app folders, including one that loads the real root `models.yaml` without error.
+  - [x] 3.5 Write `src/manifest/load.ts` with `loadProduct(appDir, { models? })`. It finds the repo root and reads the three files, with YAML syntax errors reported by line and column. It then runs the cross-field checks (Primary is a placeholder, same-vendor Fallback, missing price), the `THREATS.md` check and the A0 threshold check, and deep-freezes the result. Test it with temporary app folders, including one that loads the real root `models.yaml` without error.
     - _Requirements: 2.1, 2.5, 2.6, 2.7, 4.2, 4.3, 4.4, 4.7, 7.3, 8.1, D-57, D-64_
 
 - [ ] 4. Trace: pure parts
