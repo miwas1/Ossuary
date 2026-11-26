@@ -39,12 +39,12 @@ Ground rules for every task:
   - [x] 3.5 Write `src/manifest/load.ts` with `loadProduct(appDir, { models? })`. It finds the repo root and reads the three files, with YAML syntax errors reported by line and column. It then runs the cross-field checks (Primary is a placeholder, same-vendor Fallback, missing price), the `THREATS.md` check and the A0 threshold check, and deep-freezes the result. Test it with temporary app folders, including one that loads the real root `models.yaml` without error.
     - _Requirements: 2.1, 2.5, 2.6, 2.7, 4.2, 4.3, 4.4, 4.7, 7.3, 8.1, D-57, D-64_
 
-- [ ] 4. Trace: pure parts
-  - [ ] 4.1 Write `src/trace/attributes.ts` with every attribute name as a constant. Check each `gen_ai.*` name against the OpenTelemetry semantic-conventions registry on the day of writing. Keep `gen_ai.usage.cache_creation.input_tokens` only if the registry defines it, and note the check date in a comment.
+- [x] 4. Trace: pure parts
+  - [x] 4.1 Write `src/trace/attributes.ts` with every attribute name as a constant. Check each `gen_ai.*` name against the OpenTelemetry semantic-conventions registry on the day of writing. Keep `gen_ai.usage.cache_creation.input_tokens` only if the registry defines it, and note the check date in a comment.
     - _Requirements: 22.3, 22.4, 22.5, 22.6, D-47_
-  - [ ] 4.2 Write `src/trace/redact.ts` with `createRedactor(env)` and `redact`, for secrets, emails and the three phone pattern groups. Unit-test every example in Requirement 23.2, a `+44` number, a number next to another number, and keys left unchanged.
+  - [x] 4.2 Write `src/trace/redact.ts` with `createRedactor(env)` and `redact`, for secrets, emails and the three phone pattern groups. Unit-test every example in Requirement 23.2, a `+44` number, a number next to another number, and keys left unchanged.
     - _Requirements: 23.1, 23.2, 23.3, OPS-09_
-  - [ ] 4.3 Property test P1-4: clean text is unchanged, and redaction is idempotent.
+  - [x] 4.3 Property test P1-4: clean text is unchanged, and redaction is idempotent.
     - _Requirements: 23.6_
 
 - [ ] 5. Gateway: pure core
