@@ -1,11 +1,24 @@
 # models.yaml (repo root): the only file with model IDs and prices (MODEL-07).
-# Tiers follow the framework's volatile defaults register.
-# Fill in the fallback IDs from each vendor's docs on the day you build (plan §5).
+# Tiers follow the framework's volatile defaults register. Every fallback is OpenAI (D-48).
 tiers:
-  small:    { primary: "anthropic:claude-haiku-5-5",  fallback: "google:<id>" }
-  mid:      { primary: "anthropic:claude-sonnet-5-5", fallback: "openai:<id>" }   # Opus 5.5 is also a mid-tier candidate
-  frontier: { primary: "anthropic:claude-fable-5-2",  fallback: "google:<id>" }
+  small:    { primary: "anthropic:claude-haiku-5-5",  fallback: "openai:gpt-6-luna" }
+  mid:      { primary: "anthropic:claude-sonnet-5-5", fallback: "openai:gpt-6.2-sol" }   # Opus 5.5 is also a mid-tier candidate
+  frontier: { primary: "anthropic:claude-fable-5-2",  fallback: "openai:gpt-6.2-astra" }
 
-# Per million tokens, per model ID, copied from vendor pages with the date, for example:
-#   "anthropic:<id>": { input: 0.00, cached_input: 0.00, output: 0.00, currency: USD, source: "<vendor pricing URL>", checked: 2026-11-25 }
-prices: {}
+# USD per million tokens, standard tier, checked 2026-11-26 (D-46, D-49).
+#   https://platform.claude.com/docs/en/about-claude/pricing
+#   https://developers.openai.com/api/docs/pricing
+# Fields: input, cached_input (cache read), cache_write_input, output.
+# cache_write_input is the price for the cache lifetime the gateway requests: 5 minutes on
+# Anthropic, 30 minutes on OpenAI (D-60).
+# max_prompt_tokens is the largest prompt priced at these rates; the gateway falls back or
+# refuses instead of paying long-context rates (D-60). No max_prompt_tokens means no such limit.
+# image_input_tokens (per model, the allowance for one resized image) is added in Phase 4 (D-60).
+prices:
+  "anthropic:claude-haiku-5-5":  { input: 0.10, cached_input: 0.01, cache_write_input: 0.125, output: 0.50, max_prompt_tokens: 100000, currency: USD, source: "https://platform.claude.com/docs/en/about-claude/pricing", checked: 2026-11-26 }
+  "anthropic:claude-sonnet-5-5": { input: 2.00, cached_input: 0.10, cache_write_input: 2.50,  output: 10.00, currency: USD, source: "https://platform.claude.com/docs/en/about-claude/pricing", checked: 2026-11-26 }
+  "anthropic:claude-opus-5-5":   { input: 4.00, cached_input: 0.20, cache_write_input: 5.00,  output: 20.00, currency: USD, source: "https://platform.claude.com/docs/en/about-claude/pricing", checked: 2026-11-26 }
+  "anthropic:claude-fable-5-2":  { input: 8.00, cached_input: 0.20, cache_write_input: 10.00, output: 40.00, currency: USD, source: "https://platform.claude.com/docs/en/about-claude/pricing", checked: 2026-11-26 }
+  "openai:gpt-6-luna":           { input: 0.10, cached_input: 0.01, cache_write_input: 0.125, output: 0.50,  max_prompt_tokens: 272000, currency: USD, source: "https://developers.openai.com/api/docs/pricing", checked: 2026-11-26 }
+  "openai:gpt-6.2-sol":          { input: 2.00, cached_input: 0.10, cache_write_input: 2.50,  output: 10.00, max_prompt_tokens: 272000, currency: USD, source: "https://developers.openai.com/api/docs/pricing", checked: 2026-11-26 }
+  "openai:gpt-6.2-astra":        { input: 8.00, cached_input: 0.40, cache_write_input: 10.00, output: 40.00, max_prompt_tokens: 272000, currency: USD, source: "https://developers.openai.com/api/docs/pricing", checked: 2026-11-26 }

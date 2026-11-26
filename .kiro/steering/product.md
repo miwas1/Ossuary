@@ -27,6 +27,19 @@ Each app is a thin layer: it declares a code in `product.yaml` and imports `@oss
 4. No eval, no merge: the regression and safety sets pass before a phase closes.
 5. Where `docs/decisions.md` differs from the plan, `docs/decisions.md` wins.
 
+## Autonomy
+
+- Decide, record, continue. When the plan or framework leaves a choice open, pick the option that best serves the current exit criteria, record it in `docs/decisions.md` as approved, and keep going.
+- Stop and ask only when a choice would:
+  1. spend money beyond the smoke test, or need a key or account that isn't in `.env`;
+  2. delete or overwrite anything outside the current stage's folders;
+  3. change the plan's scope: the apps, the category or what ships;
+  4. weaken a safety rule: the guard, approvals, redaction, thresholds or eval tasks.
+- Put non-blocking questions in `docs/open-questions.md` and never wait on them.
+- If something needs a key that isn't in `.env`, build and test it against the fake provider, list that exit criterion in `docs/open-questions.md`, and move on.
+- Eval runs on the fake provider are tagged `provider=fake` and never count toward a release threshold.
+- Keep end-of-turn reports to five lines: done, open, next.
+
 ## Out of scope
 
 Accounts and login, real payments (metering shows on the dashboard only), portfolio governance, compliance files and multi-tenant admin.

@@ -30,9 +30,17 @@ describe("volatile register", () => {
     expect(hits).toEqual([]);
   });
 
-  it("models.yaml has the three tiers and an empty prices block", () => {
+  it("models.yaml has the three tiers and a dated, sourced price for every tier model", () => {
     const text = fs.readFileSync(path.join(root, "models.yaml"), "utf8");
-    for (const tier of ["small", "mid", "frontier"]) expect(text).toMatch(new RegExp(`^\\s+${tier}:\\s+\\{\\s*primary: "[a-z]+:[^"]+",\\s*fallback: "[a-z]+:[^"]+"\\s*\\}`, "m"));
-    expect(text).toMatch(/^prices: \{\}/m);
+    const ids: string[] = [];
+    for (const tier of ["small", "mid", "frontier"]) {
+      const m = text.match(new RegExp(`^\\s+${tier}:\\s+\\{\\s*primary: "([a-z]+:[^"]+)",\\s*fallback: "([a-z]+:[^"]+)"\\s*\\}`, "m"));
+      expect(m, tier).not.toBeNull();
+      ids.push(m![1]!, m![2]!);
+    }
+    const priceLines = text.split("\n").filter((l) => /^\s+"[a-z]+:[^"]+":\s*\{/.test(l));
+    expect(priceLines.length).toBeGreaterThan(0);
+    for (const line of priceLines) expect(line).toMatch(/source: "https:\/\/[^"]+", checked: \d{4}-\d{2}-\d{2}/);
+    for (const id of ids) expect(priceLines.some((l) => l.trimStart().startsWith(`"${id}":`)), id).toBe(true);
   });
 });

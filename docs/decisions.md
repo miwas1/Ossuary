@@ -214,14 +214,174 @@ Each entry gives the decision, the reason, and the plan section it overrides, if
 - Reason: Kiro IDE 1.5.44 showed “Reference cut short” for both whole-document references in the workspace steering panel.
 - Overrides: the two whole-document references in plan §9.
 
+## Phase 1: 01-skeleton-core
+
+All approved in the requirements round (26 Nov 2026). The spec is `.kiro/specs/01-skeleton-core/requirements.md`.
+
+### D-42 Two approval values beyond the plan's Policy type
+- Status: approved.
+- Decision: `approval` values are `forbidden`, `approve`, `auto-with-undo` and `auto`. A0 uses `forbidden` for both reversible and irreversible actions; A3 and A4 use `auto` for irreversible actions.
+- Reason: the plan type has no value for "no actions" or for unattended irreversible actions.
+- Overrides: plan §5 `Policy` type.
+
+### D-43 A0 products set their own threshold
+- Status: approved.
+- Decision: A0 has no numeric default bar (framework §8.3: "above the target set at G1"), so an A0 product must set `release.threshold` in `product.yaml` or it fails to load.
+- Séance (CNV-A0-R2) starts in Phase 5 with a provisional threshold and raises it after its first baseline run. Raising is always allowed (D-44).
+- Overrides: plan §5 autonomy table.
+
+### D-44 Overrides only raise, through a release block
+- Status: approved.
+- Decision: overrides come from an optional `release: { threshold }` block in `product.yaml`. A threshold below the autonomy default is a load error, not clamped. The measure can't be overridden.
+- Overrides: plan §5 `resolvePolicy(code, raise?)`.
+
+### D-45 Workspace daily cap in product.yaml
+- Status: approved.
+- Decision: `limits.max_workspace_spend_usd_per_day` is a required `product.yaml` field. The global `DAILY_SPEND_CAP_USD` and the per-workspace demo counts (20 documents, 3 sessions) stay in Phase 7.
+- Overrides: plan §5 `limits`, plan §12.
+
+### D-46 Spend in integer micro-dollars
+- Status: approved.
+- Decision: spend is stored and compared as integer micro-dollars. Call costs round up; caps round down. `models.yaml` prices take an optional `cache_write_input` for vendors that charge more for cache writes; without it, cache writes are priced at `input`.
+- Overrides: plan §5 `prices`; extends the tech.md money rule.
+
+### D-47 Non-standard trace attributes use the ossuary. prefix
+- Status: approved.
+- Decision: attributes OpenTelemetry GenAI doesn't define are named `ossuary.*`, so the plan's `gen_ai.fallback=true` becomes `ossuary.fallback=true`. A name that would extend another attribute's name uses an underscore instead of a dot (`ossuary.fallback_reason`, `ossuary.prompt_limit_exceeded`), because OpenTelemetry advises against an attribute name that is also a namespace. GenAI names follow the current semantic-conventions registry (for example `gen_ai.provider.name`, not `gen_ai.system`). [Registry](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/registry/attributes/gen-ai.md)
+- Overrides: plan §6 gateway behaviour.
+
+### D-48 Anthropic and OpenAI adapters; every fallback is OpenAI
+- Status: approved.
+- Decision: Phase 1 ships Anthropic and OpenAI adapters. Every tier's fallback in `models.yaml` is an OpenAI model. There is no Google adapter in Phase 1; the provider interface stays open for one later.
+- Overrides: plan §5 `models.yaml` (Google fallbacks for small and frontier), plan §10 row 1.
+
+### D-49 No price, no call
+- Status: approved.
+- Decision: the gateway never calls a model without a `prices` entry, and `models.yaml` fails to load if a tier model has none.
+- Prices were filled on 26 Nov 2026 from the standard-tier tables at the [Anthropic pricing page](https://platform.claude.com/docs/en/about-claude/pricing) and the [OpenAI pricing page](https://developers.openai.com/api/docs/pricing). The one value you marked to check, the cached-input price of the small fallback, was read from the OpenAI page the same day ($0.01 per million, short context).
+- Overrides: plan §6 gateway behaviour.
+
+### D-50 The fake provider is public
+- Status: approved.
+- Decision: `createFakeProvider` is exported from `@ossuary/skeleton` so app tests can use it. `fake:*` model IDs and prices in tests and the fake provider don't count as model IDs under MODEL-07.
+
+### D-51 Echo has a --fake mode
+- Status: approved.
+- Decision: `pnpm --filter echo task --fake "<topic>"` runs on the fake provider, so the "trace in local PostgreSQL" check needs no API keys.
+
+### D-52 What redaction covers
+- Status: approved.
+- Decision: redaction applies to spans (attributes, events, errors) and to error messages on task rows. It removes email addresses, phone numbers (including Nigerian formats) and secret values (OPS-09). Task inputs and saved task state are not redacted, because a task must resume from its real data.
+- Follow-up: since task inputs and saved state stay unredacted, Phase 7 adds a retention purge for them (OPS-09).
+- Overrides: plan §6 trace.
+
+### D-53 The time cap counts active time
+- Status: approved.
+- Decision: `max_seconds` counts active time summed across restarts, so a task resumed the next day doesn't stop at once and a restart doesn't reset the clock.
+
+### D-54 pipeline rejects action steps until Phase 2
+- Status: approved.
+- Decision: until Phase 2's approval gate exists, a `pipeline` with a step of kind `action` fails at definition time (fail closed).
+
+### D-55 The public db export
+- Status: approved.
+- Decision: `@ossuary/skeleton` exports `createDb`; migrations run through its handle's `migrate()`. This settles the Phase 1 forward note.
+
+### D-56 Four phase-local properties
+- Status: approved.
+- Decision: besides plan §11 properties 1, 2, 5, 6 and 8, Phase 1 tests P1-1 (each code axis drives only its own Policy fields), P1-2 (judge and generator never share a served model), P1-3 (task state round trip and resume equivalence), P1-4 (redaction leaves clean text alone and is idempotent) and P1-5 (the prompt token estimate never undercounts a recorded real count, added with D-60).
+
+### D-57 Missing THREATS.md fails the load
+- Status: approved.
+- Decision: `loadProduct` fails when the Policy requires a threat model (R2, R3) and the app has no `THREATS.md`. Echo is R1 and is unaffected.
+
+### D-58 YAML schemas reject unknown keys
+- Status: approved.
+- Decision: `product.yaml`, `routing.yaml` and `models.yaml` schemas are strict, so a misspelt field fails at load time. Later phases add fields as they need them.
+
+### D-59 Step timeout and output cap in routing.yaml
+- Status: approved.
+- Decision: model steps take optional `timeout_ms` (1,000 to 300,000, default 30,000) and `max_output_tokens` (1 to 64,000, default 1,024). The time and spend reservations need both.
+- Overrides: plan §5 `routing.yaml`.
+
+### D-60 Prompt limits, cache-write lifetimes and image allowances
+- Status: approved (your D-49 answer, revised after the second requirements round).
+- Prompt limit: a `models.yaml` price entry may set `max_prompt_tokens`, the largest prompt its prices cover (the vendors charge long-context rates above it). A model with no `max_prompt_tokens` has no limit.
+- Estimate: the gateway checks a prompt token estimate against each candidate model's limit: UTF-8 text bytes divided by 2.5 and rounded up, plus a per-segment allowance, plus one image allowance per image. Image bytes are never counted. The first version counted one token per byte, which refused Haiku prompts at about 25,000 real tokens.
+- Routing: a prompt over the primary's limit but within the fallback's goes to the fallback without contacting the primary, recorded as `ossuary.fallback=true` and `ossuary.fallback_reason=prompt_too_long`. A prompt that fits no candidate is refused with `PromptTooLongError` before any reservation or vendor contact. A repair call that its served model can't take ends in `StructuredOutputError`.
+- Overrun flag: if a response reports more input tokens than the served model's limit, its span gets `ossuary.prompt_limit_exceeded=true`, so it shows on `/bones`. The call is still charged at the listed prices.
+- Evidence: property P1-5 checks that the estimate is never below the input tokens a real vendor reported for any prompt in the committed token-count fixtures. The smoke test's recording (D-71) is the only way to write those fixtures. If P1-5 fails, the divisor goes down; recorded counts are never edited.
+- Reservations: the token and spend reservations use the same estimate plus the call's output cap (your design-round answer). P1-5 is what shows the estimate is an upper bound. One token per byte would make tasks hit `max_tokens` on reservations alone when the real call fits. If a real count ever exceeds the estimate, the overrun path (Requirement 13.7) charges the actual cost and stops further charges on that task.
+- Cache writes: every cache write is priced at the lifetime the gateway requests. The Anthropic adapter requests 5 minutes and the OpenAI adapter 30 minutes, and `cache_write_input` in `models.yaml` holds the price for that lifetime. The OpenAI 30-minute write prices (sol 2.50, astra 10.00, luna 0.125 per million) were added from the [OpenAI pricing page](https://developers.openai.com/api/docs/pricing) on 26 Nov 2026.
+- Images: in Phase 4 the skeleton resizes every image to a fixed maximum size before it reaches the gateway, and each image counts as the model's `image_input_tokens` allowance from `models.yaml`. Phase 1 builds only the estimator's image path and the optional field. With no allowances set, every image call fails closed, and the vendor adapters reject image parts until Phase 4 builds image sending. The maximum size and the allowance values are Phase 4 decisions.
+- Overrides: plan §5 `prices`, plan §6 gateway behaviour.
+
+### D-61 Turbo cache inputs include the manifests
+- Status: approved.
+- Decision: root `turbo.json` lists `models.yaml` in `globalDependencies`, so a change to it reruns every task. Each app's `turbo.json` extends the root and adds `product.yaml`, `routing.yaml` and `evals/**` to the inputs of its `test` and `eval` tasks, alongside `$TURBO_DEFAULT$`. The root `turbo.json` gains an `eval` task definition for this. Echo gets the same `turbo.json`.
+- Reason: during the requirements round `pnpm verify` replayed every task from cache after a `models.yaml` edit, so the change was never tested.
+- Overrides: the Phase 0 `turbo.json`.
+
+### D-62 Prices as integer pico-dollars per token
+- Status: approved (design round).
+- Decision: prices are held as integer pico-dollars per token (one dollar per million tokens is one micro-dollar per token, times 10⁶). `models.yaml` prices may therefore have at most six decimals, and the schema rejects more. Costs use BigInt and round up to a micro-dollar. Caps are converted with an epsilon snap, so 0.57 becomes 570,000 micro-dollars, not 569,999.
+- Extends: D-46.
+
+### D-63 Worst-case reservations price input at the dearer rate
+- Status: approved (design round).
+- Decision: the spend reservation prices every estimated input token at the higher of `input` and `cache_write_input`, because a cold cache writes the whole prefix.
+- Overrides: Requirement 13.1 as first written (input price only).
+
+### D-64 A fake model register from the skeleton
+- Status: approved (design round).
+- Decision: the skeleton exports `fakeModelRegister()`, and `defineApp` accepts a parsed `models` object, so Echo's `--fake` mode and app tests need no fake entries in `models.yaml`.
+- Extends: D-50, D-51.
+
+### D-65 Each adapter follows its vendor's cache order; Property 6 tests the adapters
+- Status: approved (design round), with your change to Property 6.
+- Decision: each vendor adapter lays out its request in that vendor's cache-prefix order, with one breakpoint at the end of the stable prefix:
+  - Anthropic: tool schemas in `tools`, then the system prompt, Skills and reference documents as `system` blocks, then the turn as `messages`. Anthropic builds its cache prefix as tools, then system, then messages ([Anthropic prompt caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)).
+  - OpenAI: tool schemas in `tools`, then the first `developer` message (D-69), then the turn. OpenAI's cache routing hashes the initial tokens, including tool definitions ([OpenAI prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)).
+- Property 6 checks each adapter's request body against its own vendor order, the breakpoint position, and byte-identical stable prefixes for requests that differ only in the turn. It does not check the plan's literal list (system, Skills, tools, reference, turn). The vendor-neutral assembled prompt keeps that list as its segment order, and the adapters reorder.
+- Overrides: plan §6 gateway behaviour and plan §11 property 6 wording; MODEL-05's list is applied per vendor.
+
+### D-66 A step may call only its own routing entry
+- Status: approved (design round).
+- Decision: a scoped gateway call may name only the running step's routing entry. This stops a generate step from calling the judge route, and a code step from calling any model.
+
+### D-67 Where the time cap is checked
+- Status: approved (design round).
+- Decision: the time cap is checked before each step and each call, by aborting in-flight calls, and through `ctx.budget.check()`. A code step that does neither can overrun until it returns.
+
+### D-68 One runner per task
+- Status: approved (design round).
+- Decision: concurrent resumes of the same task are not guarded against in Phase 1.
+
+### D-69 The OpenAI system prompt goes in the first developer message
+- Status: approved (design round).
+- Decision: the OpenAI adapter puts the system prompt, Skills and reference documents in the first `developer` message and never uses the top-level `instructions` field. Newer OpenAI models append `instructions` after the input and bill it uncached on every request ([OpenAI prompt caching](https://developers.openai.com/api/docs/guides/prompt-caching)).
+
+### D-70 Rate limits trigger the fallback, with one bounded retry
+- Status: approved (your answer to the design's Q-1).
+- Decision: HTTP 429 and the vendor's overloaded status are classed `rate_limited`, a fallback trigger like 5xx and timeouts.
+- Retry: if the response's `Retry-After` delay is within the step's allowed wait and the task's remaining time, the gateway waits and retries the same model once. Otherwise, or when `Retry-After` is missing, it goes straight to the fallback with `ossuary.fallback_reason=rate_limited`.
+- Allowed wait: `routing.yaml` model steps take `max_retry_wait_ms`, an integer from 0 to 2,000 with a default of 2,000 (batch steps). Realtime steps set 0; Séance's `respond` does so in Phase 5.
+- Limit: no vendor is retried more than once per call. A call makes at most two attempts per vendor, four in all, and switches to the fallback at most once. The same rule applies to a rate-limited fallback.
+- Overrides: Requirement 14 as first written (429 was a `client` failure); extends D-59.
+
+### D-71 No keys needed in Phase 1; calibration closes Phase 4
+- Status: approved (design round).
+- Decision: the skeleton builds and passes `pnpm verify` with no API keys. With no recorded token counts, P1-5 is skipped and `pnpm verify` prints a `P1-5 not calibrated` line. With some recordings but not all, P1-5 runs on what exists and prints `P1-5 partly calibrated`, naming the missing vendor and tier pairs. `estimateCalibration()` exposes the same status, so `/bones` can show it from Phase 3.
+- Recording: whenever the smoke test runs (`OSSUARY_SMOKE=1`) with a vendor key in the environment or `.env`, it also records that vendor's token counts and replaces that vendor's fixture entries. There is no separate recording switch.
+- Exit criterion: being fully calibrated moves from Phase 1 (Requirement 27.5 as first written) to Phase 4, the first phase where an app calls a real model.
+
 ## Forward notes for later phases
 
-- Phase 1: decide the public `db` export (`createDb`, `migrateDb`) from `src/index.ts`.
 - Phase 2: `pnpm eval` database selection and JSON results (D-35).
-- Phase 3: enable both MCP servers in `.kiro/settings/mcp.json` (D-10).
-- Phase 4: restore `#[[file:apps/exhume/product.yaml]]` in `archetype-ext.md` (D-04); add `apps/exhume/Dockerfile` and `api/health` (D-35).
-- Phase 5: restore `#[[file:apps/seance/product.yaml]]` in `archetype-cnv.md` (D-04); add `apps/seance/Dockerfile` and `api/health` (D-35); allow `@elevenlabs/react` under `apps/seance/src/app/` only (D-18).
-- Phase 7: the compose `apps` profile and the CI image-build and compose smoke-test job (D-35).
+- Phase 3: enable both MCP servers in `.kiro/settings/mcp.json` (D-10); show the token-estimate calibration status from `estimateCalibration()` on `/bones`, with a "not calibrated" notice when there are no recordings (D-71).
+- Phase 4: restore `#[[file:apps/exhume/product.yaml]]` in `archetype-ext.md` (D-04); add `apps/exhume/Dockerfile` and `api/health` (D-35); choose the image maximum size, build the resize step and image sending in both adapters, and set `image_input_tokens` per model in `models.yaml` with its source (D-60); exit criterion: the token-count fixtures are fully calibrated and P1-5 passes on them, which needs one smoke run with both API keys (D-71).
+- Phase 5: restore `#[[file:apps/seance/product.yaml]]` in `archetype-cnv.md` (D-04); add `apps/seance/Dockerfile` and `api/health` (D-35); allow `@elevenlabs/react` under `apps/seance/src/app/` only (D-18); give Séance a provisional `release.threshold` and raise it after the first baseline run (D-43); set `max_retry_wait_ms: 0` on Séance's realtime `respond` step (D-70).
+- Phase 7: the compose `apps` profile and the CI image-build and compose smoke-test job (D-35); a retention purge for task inputs and saved task state (D-52, OPS-09).
 
 ## Local PostgreSQL in WSL
 
