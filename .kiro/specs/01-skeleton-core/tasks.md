@@ -19,12 +19,12 @@ Ground rules for every task:
   - [x] 1.3 `turbo.json` lists `models.yaml` in `globalDependencies` and defines an `eval` task. `apps/exhume/turbo.json` and `apps/seance/turbo.json` add `product.yaml`, `routing.yaml` and `evals/**` to their `test` and `eval` inputs.
     - _Requirements: 26.1, D-61_
 
-- [ ] 2. Dependencies and shared pieces
-  - [ ] 2.1 Add `zod` (v4), `yaml` (`catalog:`), `@anthropic-ai/sdk` and `openai` to `@ossuary/skeleton`, and `fast-check` (`catalog:`) as a dev dependency. Pin exact versions and commit `pnpm-lock.yaml`. Add `vitest.smoke.config.ts` (includes only `**/*.smoke.ts`) and the package script `smoke`, and make sure the default Vitest config excludes `*.smoke.ts`.
+- [x] 2. Dependencies and shared pieces
+  - [x] 2.1 Add `zod` (v4), `yaml` (`catalog:`), `@anthropic-ai/sdk` and `openai` to `@ossuary/skeleton`, and `fast-check` (`catalog:`) as a dev dependency. Pin exact versions and commit `pnpm-lock.yaml`. Add `vitest.smoke.config.ts` (includes only `**/*.smoke.ts`) and the package script `smoke`, and make sure the default Vitest config excludes `*.smoke.ts`.
     - _Requirements: 1.2, 25.3_
-  - [ ] 2.2 Write `src/errors.ts` with every typed error class from the design's error table. Each class has a string `code`, and its message holds no secrets, prompt text or URLs. Add a unit test that each class sets `code` and `name`.
+  - [x] 2.2 Write `src/errors.ts` with every typed error class from the design's error table. Each class has a string `code`, and its message holds no secrets, prompt text or URLs. Add a unit test that each class sets `code` and `name`.
     - _Requirements: 1.1, 9.3_
-  - [ ] 2.3 Write `src/money.ts` with `picoPerToken`, `ceilDiv`, `costMicros` and `capMicros`. Unit-test 0.125, 0.01, 0.57 (gives 570,000), a seven-decimal price (rejected), and a cost that rounds up by one micro-dollar.
+  - [x] 2.3 Write `src/money.ts` with `picoPerToken`, `ceilDiv`, `costMicros` and `capMicros`. Unit-test 0.125, 0.01, 0.57 (gives 570,000), a seven-decimal price (rejected), and a cost that rounds up by one micro-dollar.
     - _Requirements: 12.1, 12.3, 21.3, D-46, D-62_
 
 - [ ] 3. Manifest
