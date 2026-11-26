@@ -47,18 +47,18 @@ Ground rules for every task:
   - [x] 4.3 Property test P1-4: clean text is unchanged, and redaction is idempotent.
     - _Requirements: 23.6_
 
-- [ ] 5. Gateway: pure core
-  - [ ] 5.1 Write `src/gateway/types.ts` and `src/gateway/assemble.ts`. Unit-test that empty kinds are left out, that the repair turn goes last, and that tool schemas serialise with sorted keys.
+- [x] 5. Gateway: pure core
+  - [x] 5.1 Write `src/gateway/types.ts` and `src/gateway/assemble.ts`. Unit-test that empty kinds are left out, that the repair turn goes last, and that tool schemas serialise with sorted keys.
     - _Requirements: 9.1, 10.1, 10.2, 10.3_
-  - [ ] 5.2 Write `src/gateway/estimate.ts` with `promptTokenEstimate`, using the integer 2/5 divisor, image allowances that never count image bytes, and the segment and request allowances. Unit-test a text-only prompt, an image prompt, and a model with no image allowance.
+  - [x] 5.2 Write `src/gateway/estimate.ts` with `promptTokenEstimate`, using the integer 2/5 divisor, image allowances that never count image bytes, and the segment and request allowances. Unit-test a text-only prompt, an image prompt, and a model with no image allowance.
     - _Requirements: 12.5, D-60_
-  - [ ] 5.3 Add `worstCaseMicros` and `reservedTokens` to `src/gateway/price.ts`, pricing input at the dearer of the input and cache-write rates.
+  - [x] 5.3 Add `worstCaseMicros` and `reservedTokens`, pricing input at the dearer of the input and cache-write rates. They live in `src/money.ts` beside the other price arithmetic, not in a separate `gateway/price.ts`.
     - _Requirements: 12.1, 13.1, 17.3, D-60, D-63_
-  - [ ] 5.4 Write `src/gateway/plan.ts` with `planAttempts` (skip reasons `killed`, `prompt_too_long`, `no_image_allowance`, `judge_excluded`) and `nextMove` (the decision table for `retry-same`, `switch` and `stop`). Unit-test each row of both tables.
+  - [x] 5.4 Write `src/gateway/plan.ts` with `planAttempts` (skip reasons `killed`, `prompt_too_long`, `no_image_allowance`, `judge_excluded`) and `nextMove` (the decision table for `retry-same`, `switch` and `stop`). Unit-test each row of both tables.
     - _Requirements: 12.5, 12.6, 12.7, 14.1 to 14.4, 14.6, 14.8, 14.9, 14.10, 15.1, 19.7, 19.8, D-70_
-  - [ ] 5.5 Write `src/gateway/structured.ts` with `parseStructured`, which handles a bare value or one code fence, and the repair message builder. Unit-test valid JSON, fenced JSON, invalid JSON and a schema miss.
+  - [x] 5.5 Write `src/gateway/structured.ts` with `parseStructured`, which handles a bare value or one code fence, and the repair message builder. Unit-test valid JSON, fenced JSON, invalid JSON and a schema miss.
     - _Requirements: 11.1, 11.2, 11.3_
-  - [ ] 5.6 Write `src/gateway/fake.ts` with `createFakeProvider` (all six outcome kinds, request recording, token-count fixture replay, `fake:` IDs only) and `fakeModelRegister()`.
+  - [x] 5.6 Write `src/gateway/fake.ts` with `createFakeProvider` (all six outcome kinds, request recording, token-count fixture replay, `fake:` IDs only) and `fakeModelRegister()`.
     - _Requirements: 24.1, 24.2, 24.3, 24.5, D-50, D-64_
 
 - [ ] 6. Database
