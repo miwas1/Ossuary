@@ -1,0 +1,5 @@
+# Each step's tier and effort (MODEL-02, MODEL-04). The judge sits on a different tier, so its
+# primary differs from the generator's (HAR-02).
+steps:
+  generate: { tier: small, effort: low, max_output_tokens: 200 }
+  evaluate: { tier: mid, effort: low, role: judge, max_output_tokens: 300 }

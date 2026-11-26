@@ -11,8 +11,8 @@ export function parseStructured<T>(text: string, schema: ZodType<T>): Parsed<T> 
   let json: unknown;
   try {
     json = JSON.parse(body);
-  } catch (e) {
-    return { ok: false, issues: [`not valid JSON: ${(e as Error).message}`] };
+  } catch {
+    return { ok: false, issues: ["not valid JSON"] };
   }
   const result = schema.safeParse(json);
   if (result.success) return { ok: true, value: result.data };

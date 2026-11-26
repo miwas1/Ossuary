@@ -10,6 +10,7 @@ import {
   StructuredOutputError,
 } from "../errors.ts";
 import type { Models, Routing } from "../manifest/schemas.ts";
+import { createRedactor } from "../trace/redact.ts";
 import { GEN_AI, OSSUARY } from "../trace/attributes.ts";
 import { memorySpanSink, withTrace, type SpanRecord } from "../trace/trace.ts";
 import { createFakeProvider, fakeModelRegister, type FakeOutcome, type FakeScript } from "./fake.ts";
@@ -36,6 +37,7 @@ function openBudget(remainingMs = 60_000): ChargeBudget & { overruns: number } {
     },
     release: (r: { open: boolean }) => void (r.open = false),
     remainingMs: () => remainingMs,
+    timeExceeded: () => new BudgetExceeded("seconds", remainingMs, remainingMs),
   };
   return b;
 }
@@ -97,6 +99,15 @@ describe("scoped calls", () => {
     expect(t.fake.requests[0]?.effort).toBe("low");
   });
 
+  it("redacts quoted and escaped secrets inside JSON trace messages", async () => {
+    const secret = 'sample-"secret\\value';
+    const t = setup([ok(secret)]);
+    await withTrace({ sink: t.sink, appId: "app", redactor: createRedactor({ TEST_SECRET: secret }) }, () => t.scoped.call({ ...ask, system: secret }));
+    const [chat] = t.chats();
+    expect(JSON.parse(String(attr(chat, GEN_AI.systemInstructions)))).toEqual([{ type: "text", content: "[secret]" }]);
+    expect(JSON.parse(String(attr(chat, GEN_AI.outputMessages)))[0].parts[0].content).toBe("[secret]");
+  });
+
   it("lets a step call only its own routing entry, and never from a code step (D-66)", async () => {
     const t = setup([ok("x")]);
     await expect(t.call({ ...ask, step: "judge" })).rejects.toThrow(/may only call its own routing entry/);
@@ -144,10 +155,11 @@ describe("scoped calls", () => {
     const t = setup(byModel({ "fake:small": [{ kind: "timeout" }], "fake-b:small": [ok("fb")] }));
     await t.call(ask);
     expect(attr(t.chats()[1], OSSUARY.fallbackReason)).toBe("timeout");
-    const capped = setup(byModel({ "fake:small": [{ kind: "timeout" }], "fake-b:small": [ok("fb")] }), {}, { budget: openBudget(500) });
+    const capped = setup(byModel({ "fake:small": [{ kind: "timeout" }], "fake-b:small": [ok("fb")] }), {}, { budget: openBudget(1_000) });
     const err = await capped.call(ask).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(BudgetExceeded);
     expect((err as BudgetExceeded).kind).toBe("seconds");
+    expect(err).toMatchObject({ limit: 1_000, used: 1_000 });
     expect(capped.fake.requests).toHaveLength(1);
   });
 
@@ -210,6 +222,16 @@ describe("scoped calls", () => {
     expect(attr(t.chats()[0], OSSUARY.fallbackReason)).toBe("judge_excluded");
     const both = setup([ok("x")], {}, { stepName: "judge", exclude: new Set(["fake:mid", "fake-b:mid"]) });
     await expect(both.call(ask)).rejects.toBeInstanceOf(JudgeConflictError);
+    const failed = setup([{ kind: "server" }], {}, { stepName: "judge", exclude: new Set(["fake:mid"]) });
+    await expect(failed.call(ask)).rejects.toMatchObject({ name: "JudgeConflictError", excluded: ["fake:mid"] });
+    expect(failed.fake.requests.map((req) => req.modelId)).toEqual(["fake-b:mid"]);
+  });
+
+  it("reports a judge conflict when the reported model is excluded and the fallback fails", async () => {
+    const fake = createFakeProvider([ok("same model"), { kind: "server" }]);
+    const t = setup([], { providers: [{ ...fake, send: async (req) => ({ ...await fake.send(req), model: "small" }) }] }, { stepName: "judge", exclude: new Set(["fake:small"]) });
+    await expect(t.call(ask)).rejects.toMatchObject({ name: "JudgeConflictError", excluded: ["fake:small"] });
+    expect(fake.requests.map((req) => req.modelId)).toEqual(["fake:mid", "fake-b:mid"]);
   });
 });
 
@@ -221,6 +243,32 @@ describe("structured output (Requirement 11)", () => {
     expect(t.fake.requests.map((r) => r.modelId)).toEqual(["fake:small", "fake:small"]);
     expect(attr(t.chats()[1], OSSUARY.repair)).toBe(true);
     expect(t.fake.requests[0]?.jsonSchema).toMatchObject({ type: "object" });
+  });
+
+  it("repairs on the actual served model and charges both replies at its price", async () => {
+    const fake = createFakeProvider([
+      { kind: "ok", text: "not json", usage: { inputTokens: 1, outputTokens: 1 } },
+      { kind: "ok", text: '{"pass":true}', usage: { inputTokens: 1, outputTokens: 1 } },
+    ]);
+    const models = fakeModelRegister();
+    models.prices["fake:mid"] = { ...models.prices["fake:mid"]!, input: 5, output: 8 };
+    const t = setup([], { models, providers: [{ ...fake, send: async (req) => ({ ...await fake.send(req), model: "mid" }) }] });
+    await expect(t.call({ ...ask, schema })).resolves.toMatchObject({ model: "fake:mid", costMicros: 26, value: { pass: true } });
+    expect(fake.requests.map((req) => req.modelId)).toEqual(["fake:small", "fake:mid"]);
+    expect(t.scoped.served).toEqual(["fake:mid", "fake:mid"]);
+  });
+
+  it("stops a repair that runs out of task time without switching vendors", async () => {
+    const t = setup([ok("nope"), { kind: "timeout" }], {}, { budget: openBudget(500) });
+    await expect(t.call({ ...ask, schema })).rejects.toMatchObject({ kind: "seconds", limit: 500, used: 500 });
+    expect(t.fake.requests.map((req) => req.modelId)).toEqual(["fake:small", "fake:small"]);
+  });
+
+  it("retains the fallback reason on its repair attempt", async () => {
+    const t = setup([{ kind: "server" }, ok("nope"), ok('{"pass":true}')]);
+    await expect(t.call({ ...ask, schema })).resolves.toMatchObject({ model: "fake-b:small", value: { pass: true } });
+    const repair = t.chats().find((chat) => attr(chat, OSSUARY.repair) === true);
+    expect(repair?.attributes).toMatchObject({ [OSSUARY.fallback]: true, [OSSUARY.fallbackReason]: "server" });
   });
 
   it("throws StructuredOutputError when the repair fails too", async () => {

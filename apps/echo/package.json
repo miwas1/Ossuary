@@ -1,0 +1,24 @@
+{
+  "name": "echo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Echo: a throwaway GEN-A1-R1 app that proves the skeleton end to end (Phase 1).",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p .",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "task": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@ossuary/skeleton": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

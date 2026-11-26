@@ -5,6 +5,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["src/**/*.smoke.ts"],
+    reporters: ["verbose"],
     testTimeout: 180_000,
   },
 });

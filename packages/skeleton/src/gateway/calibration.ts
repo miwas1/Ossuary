@@ -34,7 +34,7 @@ export function writeTokenCounts(vendor: string, fresh: readonly TokenCountEntry
 
 /** The segments a corpus prompt is sent as, both when recording and when checking P1-5. */
 export function corpusSegments(p: CorpusPrompt): Segment[] {
-  return assemble({ system: p.system, turn: [{ role: "user", content: p.turn }] });
+  return assemble({ system: p.system, reference: p.reference ? [p.reference] : [], turn: [{ role: "user", content: p.turn }] });
 }
 
 export interface Calibration {

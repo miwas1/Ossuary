@@ -69,6 +69,28 @@ importers:
         specifier: 'catalog:'
         version: 8.74.0(eslint@10.15.0)(typescript@6.0.3)
 
+  apps/echo:
+    dependencies:
+      '@ossuary/skeleton':
+        specifier: workspace:*
+        version: link:../../packages/skeleton
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
+      eslint:
+        specifier: 'catalog:'
+        version: 10.15.0
+      tsx:
+        specifier: 'catalog:'
+        version: 4.23.15
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 5.1.2(@opentelemetry/api@1.10.0)(@types/node@24.19.2)(vite@8.3.8(@types/node@24.19.2)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+
   apps/exhume:
     dependencies:
       '@ossuary/skeleton':

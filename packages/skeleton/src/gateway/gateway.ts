@@ -21,7 +21,7 @@ import { capMicros, costMicros, reservedTokens, toPicoPrice, worstCaseMicros, ty
 import { GEN_AI, OPERATION, OSSUARY } from "../trace/attributes.ts";
 import { span, type ActiveSpan } from "../trace/trace.ts";
 import { assemble, withRepairTurn } from "./assemble.ts";
-import { promptTokenEstimate } from "./estimate.ts";
+import { imageCount, promptTokenEstimate } from "./estimate.ts";
 import { nextMove, planAttempts, type Candidate } from "./plan.ts";
 import { dbSpendStore, memorySpendStore, utcDay, type SpendStore } from "./spend.ts";
 import { parseStructured } from "./structured.ts";
@@ -37,6 +37,7 @@ export interface ChargeBudget {
   settle(r: { readonly tokens: number; readonly micros: number; open: boolean }, tokens: number, micros: number): boolean;
   release(r: { readonly tokens: number; readonly micros: number; open: boolean }): void;
   remainingMs(): number;
+  timeExceeded(): BudgetExceeded;
 }
 
 export interface GatewayOptions {
@@ -95,11 +96,13 @@ function otelMessages(segments: readonly Segment[]) {
   const parts = (s: Segment) => s.parts.map((p) => (p.type === "text" ? { type: "text", content: p.text } : { type: "blob", mime_type: p.mediaType, modality: "image" }));
   const system = segments.filter((s) => s.kind !== "turn").map((s) => ({ type: "text", content: s.parts.map((p) => (p.type === "text" ? p.text : "")).join("") }));
   const input = segments.filter((s) => s.kind === "turn").map((s) => ({ role: s.role, parts: parts(s) }));
-  return { system: JSON.stringify(system), input: JSON.stringify(input) };
+  return { system, input };
 }
 
 export function createGateway(opts: GatewayOptions): Gateway {
   const models = opts.models;
+  const modelFamily = (id: string) => id.replace(/-(?:\d{4}-\d{2}-\d{2}|\d{8})$/, "");
+  const priceFor = (id: string) => models.prices[id] ?? models.prices[modelFamily(id)];
   const env = opts.env ?? process.env;
   const now = opts.now ?? Date.now;
   const sleep = opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
@@ -130,14 +133,15 @@ export function createGateway(opts: GatewayOptions): Gateway {
 
   function scope(s: ScopeOptions): ScopedGateway {
     const served: string[] = [];
-    const exclude = s.exclude ?? new Set<string>();
+    const exclude = new Set(s.exclude);
+    for (const id of exclude) if (!models.prices[id]) exclude.add(modelFamily(id));
     const capUsdMicros = capMicros(s.workspaceCapUsd);
 
     async function attempt(
-      cand: Candidate,
+      cand: Pick<Candidate, "id" | "slot">,
       ctx: { step: string; entry: ModelStep; segments: readonly Segment[]; jsonSchema: Record<string, unknown> | undefined; maxOut: number; flags: Record<string, unknown> },
-    ): Promise<ProviderResponse & { costMicros: number }> {
-      const price = models.prices[cand.id];
+    ): Promise<ProviderResponse & { costMicros: number; servedId: string }> {
+      const price = ctx.flags[OSSUARY.repair] ? priceFor(cand.id) : models.prices[cand.id];
       if (!price) throw new PriceMissingError(cand.id);
       const pico = toPicoPrice(price);
       const provider = byVendor.get(vendorOf(cand.id));
@@ -145,14 +149,27 @@ export function createGateway(opts: GatewayOptions): Gateway {
       const estimate = promptTokenEstimate(ctx.segments, price.image_input_tokens ?? 0);
       const reserved = s.budget.reserve(reservedTokens(estimate, ctx.maxOut), worstCaseMicros(estimate, ctx.maxOut, pico));
       const key = { appId: s.appId, workspaceId: s.workspaceId, day: utcDay(now()) };
-      if (!(await spendStore.reserve(key, reserved.micros, capUsdMicros))) {
+      let held: boolean;
+      try {
+        held = await spendStore.reserve(key, reserved.micros, capUsdMicros);
+      } catch (error) {
+        s.budget.release(reserved);
+        throw error;
+      }
+      if (!held) {
         s.budget.release(reserved);
         throw new BudgetExceeded("spend", capUsdMicros, (await spendStore.spent(key)) + reserved.micros, "workspace");
       }
       const stepTimeout = ctx.entry.timeout_ms ?? DEFAULT_TIMEOUT_MS;
       const remaining = s.budget.remainingMs();
+      if (remaining <= 0) {
+        s.budget.release(reserved);
+        await spendStore.release(key, reserved.micros);
+        throw s.budget.timeExceeded();
+      }
       const timeoutMs = Math.min(stepTimeout, remaining);
-      const capBound = remaining < stepTimeout;
+      const capBound = remaining <= stepTimeout;
+      const vendor = vendorOf(cand.id);
       const modelName = modelNameOf(cand.id);
       const messages = otelMessages(ctx.segments);
 
@@ -160,7 +177,7 @@ export function createGateway(opts: GatewayOptions): Gateway {
         `${OPERATION.chat} ${modelName}`,
         {
           [GEN_AI.operationName]: OPERATION.chat,
-          [GEN_AI.providerName]: vendorOf(cand.id),
+          [GEN_AI.providerName]: vendor,
           [GEN_AI.requestModel]: modelName,
           [GEN_AI.requestMaxTokens]: ctx.maxOut,
           [GEN_AI.systemInstructions]: messages.system,
@@ -184,14 +201,19 @@ export function createGateway(opts: GatewayOptions): Gateway {
             // A timeout we caused by aborting is a timeout, whatever the provider reported.
             const failure: FailureClass = ac.signal.aborted ? "timeout" : pe.failureClass;
             sp.set({ "ossuary.failure_class": failure });
-            throw Object.assign(new ProviderError(failure, `${cand.id}: ${failure}`, pe.retryAfterMs === undefined ? {} : { retryAfterMs: pe.retryAfterMs }), { capBound: capBound && failure === "timeout" });
+            if (ac.signal.aborted && capBound) throw s.budget.timeExceeded();
+            throw new ProviderError(failure, `${cand.id}: ${failure}`, pe.retryAfterMs === undefined ? {} : { retryAfterMs: pe.retryAfterMs });
           } finally {
             cancel();
           }
+          const servedId = `${vendor}:${resp.model}`;
+          served.push(servedId);
+          const servedPrice = priceFor(servedId);
           const usage: Usage = { inputTokens: resp.inputTokens, cacheReadTokens: resp.cacheReadTokens, cacheWriteTokens: resp.cacheWriteTokens, outputTokens: resp.outputTokens };
-          const cost = costMicros(usage, pico);
+          const cost = costMicros(usage, servedPrice ? toPicoPrice(servedPrice) : pico);
           const overrun = s.budget.settle(reserved, resp.inputTokens + resp.outputTokens, cost);
           await spendStore.settle(key, reserved.micros, cost);
+          const limit = servedPrice?.max_prompt_tokens;
           sp.set({
             [GEN_AI.responseModel]: resp.model,
             [GEN_AI.usageInputTokens]: resp.inputTokens,
@@ -199,12 +221,19 @@ export function createGateway(opts: GatewayOptions): Gateway {
             [GEN_AI.usageCacheCreationInputTokens]: resp.cacheWriteTokens,
             [GEN_AI.usageOutputTokens]: resp.outputTokens,
             [GEN_AI.responseFinishReasons]: [resp.finishReason],
-            [GEN_AI.outputMessages]: JSON.stringify([{ role: "assistant", parts: [{ type: "text", content: resp.text }], finish_reason: resp.finishReason }]),
+            [GEN_AI.outputMessages]: [{ role: "assistant", parts: [{ type: "text", content: resp.text }], finish_reason: resp.finishReason }],
             [OSSUARY.costMicros]: cost,
             ...(overrun ? { [OSSUARY.budgetOverrun]: true } : {}),
-            ...(cand.limit !== null && resp.inputTokens > cand.limit ? { [OSSUARY.promptLimitExceeded]: true } : {}),
+            ...(limit !== undefined && resp.inputTokens > limit ? { [OSSUARY.promptLimitExceeded]: true } : {}),
+            ...(!servedPrice ? { "ossuary.response_price_unlisted": true } : {}),
           });
-          return { ...resp, costMicros: cost };
+          if (ac.signal.aborted) {
+            if (capBound) throw s.budget.timeExceeded();
+            throw new ProviderError("timeout", `${cand.id}: timeout`);
+          }
+          if (!servedPrice) throw new PriceMissingError(servedId);
+          if (exclude.has(servedId)) throw new JudgeConflictError([...exclude], [{ model: servedId, outcome: "judge_excluded" }]);
+          return { ...resp, costMicros: cost, servedId };
         },
       );
     }
@@ -235,11 +264,17 @@ export function createGateway(opts: GatewayOptions): Gateway {
         if (retry) flags[OSSUARY.retry] = true;
         try {
           const resp = await attempt(current, { step, entry, segments, jsonSchema, maxOut, flags });
-          served.push(current.id);
-          return { resp, model: current, maxOut };
+          return { resp, model: current, maxOut, fallbackReason: current.slot === "fallback" ? reason : undefined };
         } catch (err) {
+          if (err instanceof JudgeConflictError && current.slot === "primary" && fallback) {
+            reason = "judge_excluded";
+            log.push({ model: current.id, outcome: "judge_excluded" });
+            log.push(...err.attempts);
+            current = fallback;
+            retry = false;
+            continue;
+          }
           if (!(err instanceof ProviderError)) throw err;
-          const capBound = (err as ProviderError & { capBound?: boolean }).capBound === true;
           log.push({ model: current.id, outcome: err.failureClass });
           const move = nextMove({
             failure: err.failureClass,
@@ -248,7 +283,7 @@ export function createGateway(opts: GatewayOptions): Gateway {
             retryAfterMs: err.retryAfterMs,
             retryWaitMs,
             remainingMs: s.budget.remainingMs(),
-            timeCapHit: capBound,
+            timeCapHit: false,
             fallbackAvailable: current.slot === "primary" && fallback !== undefined,
           });
           if (move === "retry-same") {
@@ -263,7 +298,9 @@ export function createGateway(opts: GatewayOptions): Gateway {
             retry = false;
             continue;
           }
-          if (capBound) throw new BudgetExceeded("seconds", 0, 0);
+          if (entry.role === "judge" && exclude.size > 0 && candidates.every((candidate) => candidate.skip === "judge_excluded" || log.some((record) => record.model === candidate.id && !candidate.skip))) {
+            throw new JudgeConflictError([...exclude], log);
+          }
           throw new GatewayError(`call for step "${step}" failed`, log);
         }
       }
@@ -282,33 +319,34 @@ export function createGateway(opts: GatewayOptions): Gateway {
         const first = await run(step, entry, segments, jsonSchema);
         const usage = (r: ProviderResponse): Usage => ({ inputTokens: r.inputTokens, cacheReadTokens: r.cacheReadTokens, cacheWriteTokens: r.cacheWriteTokens, outputTokens: r.outputTokens });
         if (!req.schema) {
-          return { value: first.resp.text as T, text: first.resp.text, model: first.model.id, costMicros: first.resp.costMicros, usage: usage(first.resp) };
+          return { value: first.resp.text as T, text: first.resp.text, model: first.resp.servedId, costMicros: first.resp.costMicros, usage: usage(first.resp) };
         }
         const parsed = parseStructured(first.resp.text, req.schema);
-        if (parsed.ok) return { value: parsed.value, text: first.resp.text, model: first.model.id, costMicros: first.resp.costMicros, usage: usage(first.resp) };
+        if (parsed.ok) return { value: parsed.value, text: first.resp.text, model: first.resp.servedId, costMicros: first.resp.costMicros, usage: usage(first.resp) };
 
         // One repair call on the same served model (Requirement 11.2), if that model can take the longer prompt.
         const repairSegments = withRepairTurn(segments, first.resp.text, parsed.issues);
-        const price = models.prices[first.model.id];
+        const price = priceFor(first.resp.servedId);
         const estimate = promptTokenEstimate(repairSegments, price?.image_input_tokens ?? 0);
-        if (first.model.limit !== null && estimate > first.model.limit) throw new StructuredOutputError(parsed.issues);
-        let repaired: ProviderResponse & { costMicros: number };
+        const limit = price?.max_prompt_tokens ?? null;
+        if ((limit !== null && estimate > limit) || (imageCount(repairSegments) > 0 && price?.image_input_tokens === undefined)) throw new StructuredOutputError(parsed.issues);
+        const flags = { [OSSUARY.repair]: true, ...(first.fallbackReason ? { [OSSUARY.fallbackReason]: first.fallbackReason } : {}) };
+        let repaired: Awaited<ReturnType<typeof attempt>>;
         try {
           repaired = await attempt(
-            { ...first.model, estimate, skip: undefined } as Candidate,
-            { step, entry, segments: repairSegments, jsonSchema, maxOut: first.maxOut, flags: { [OSSUARY.repair]: true } },
+            { id: first.resp.servedId, slot: first.model.slot },
+            { step, entry, segments: repairSegments, jsonSchema, maxOut: first.maxOut, flags },
           );
         } catch (err) {
-          if (err instanceof ProviderError) throw new GatewayError(`repair call for step "${step}" failed`, [{ model: first.model.id, outcome: err.failureClass }]);
+          if (err instanceof ProviderError) throw new GatewayError(`repair call for step "${step}" failed`, [{ model: first.resp.servedId, outcome: err.failureClass }]);
           throw err;
         }
-        served.push(first.model.id);
         const second = parseStructured(repaired.text, req.schema);
         if (!second.ok) throw new StructuredOutputError(second.issues);
         return {
           value: second.value,
           text: repaired.text,
-          model: first.model.id,
+          model: repaired.servedId,
           costMicros: first.resp.costMicros + repaired.costMicros,
           usage: {
             inputTokens: first.resp.inputTokens + repaired.inputTokens,

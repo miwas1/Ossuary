@@ -101,6 +101,13 @@ describe("Anthropic adapter (Requirement 9, D-65)", () => {
 });
 
 describe("OpenAI adapter (Requirement 9, D-69)", () => {
+  it("discards text from a failed response and preserves a normal output-token stop", () => {
+    for (const status of ["failed", "cancelled", "queued", "in_progress"]) {
+      expect(() => readOpenAiResponse({ model: "m", status, output_text: "partial reply" })).toThrow("OpenAI did not complete the response");
+    }
+    expect(() => readOpenAiResponse({ model: "m", status: "incomplete", incomplete_details: { reason: "content_filter" }, output_text: "partial reply" })).toThrow("OpenAI filtered the response");
+    expect(readOpenAiResponse({ model: "m", status: "incomplete", incomplete_details: { reason: "max_output_tokens" }, output_text: "reply" }).finishReason).toBe("max_output_tokens");
+  });
   it("builds tools, then one developer message ending in the breakpoint, then the turn; never instructions", () => {
     const body = buildOpenAiRequest(req({ jsonSchema: { type: "object" } }));
     expect(body.tools?.map((t) => t.name)).toEqual(["lookup"]);

@@ -35,6 +35,7 @@ const open: ChargeBudget = {
   settle: (r) => ((r.open = false), false),
   release: (r) => void (r.open = false),
   remainingMs: () => 60_000,
+  timeExceeded: () => { throw new Error("the test budget does not run out of time"); },
 };
 
 describe("gateway properties", () => {

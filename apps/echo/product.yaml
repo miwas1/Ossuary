@@ -1,0 +1,11 @@
+# Echo: a throwaway GEN app that runs one generateEvaluate task end to end (plan §10 row 1).
+id: echo
+name: Echo
+code: GEN-A1-R1
+users: The builder, checking the skeleton end to end
+market: [NG]
+north_star: share of epitaphs accepted without edits
+pricing: { model: per_unit, unit: epitaph, currency: USD }
+routing: ./routing.yaml
+evals: { dir: ./evals, core_set: core }
+limits: { max_steps: 8, max_tokens: 20000, max_seconds: 60, max_spend_usd: 0.02, max_workspace_spend_usd_per_day: 0.50 }

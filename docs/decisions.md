@@ -375,6 +375,44 @@ All approved in the requirements round (26 Nov 2026). The spec is `.kiro/specs/0
 - Recording: whenever the smoke test runs (`OSSUARY_SMOKE=1`) with a vendor key in the environment or `.env`, it also records that vendor's token counts and replaces that vendor's fixture entries. There is no separate recording switch.
 - Exit criterion: being fully calibrated moves from Phase 1 (Requirement 27.5 as first written) to Phase 4, the first phase where an app calls a real model.
 
+### D-72 Two fake vendors
+- Status: approved (implementation, under the autonomy rule).
+- Decision: the fake provider serves the vendors `fake` and `fake-b`, and `fakeModelRegister()` puts every primary on `fake` and every fallback on `fake-b`.
+- Reason: Requirement 4.4 forbids a fallback from the primary's vendor, so a single `fake` vendor (Requirement 24.3 as written) could not exercise fallbacks.
+
+### D-73 One provider object may serve several vendor names
+- Status: approved (implementation).
+- Decision: the `Provider` interface has `vendors: readonly string[]` instead of a single `vendor`, so one fake can serve both fake vendors and see every request in order.
+
+### D-74 Trace read helpers are public
+- Status: approved (implementation).
+- Decision: `@ossuary/skeleton` exports `readTrace(db, traceId)` and `countSpans(db, traceId)`. Echo's CLI prints the span count with `countSpans`, and its end-to-end test reads spans with `readTrace`, so apps never import the database driver or SQL builder. Phase 3's `/bones` queries build on them.
+
+### D-75 Where some Phase 1 code lives
+- Status: approved (implementation).
+- Decision: `worstCaseMicros` and `reservedTokens` sit in `src/money.ts` beside the other price arithmetic, not in a separate `gateway/price.ts`. Property 8's test is `harness/redaction.property.test.ts`, because it runs a whole task. Shared harness test helpers live in `harness/__tests__/helpers.ts`, which the bone count skips.
+
+### D-76 How Property 2 reads the time cap
+- Status: approved (implementation).
+- Decision: following D-67, Property 2 checks that no step and no vendor call ever starts once active time reaches the cap. A code step that advances the clock past the cap is stopped at the next check, not in the middle.
+
+### D-77 The repair call has no retry or fallback
+- Status: approved (implementation).
+- Decision: the one repair call (Requirement 11.2) is a single attempt on the model that served the first reply. If it fails at the vendor, the call ends with `GatewayError`; if its output is still invalid, with `StructuredOutputError`.
+
+### D-78 A failed task saves the step that failed in its step count
+- Status: approved (implementation).
+- Decision: when a step throws, `runTask` saves the state with the budget as it stands, which counts the step that started. A task that crashes without reaching that save resumes from the state saved after the last completed step (Property P1-3 checks this case).
+
+### D-79 Price and track the model reported in the response
+- Status: approved (Phase 1 review).
+- Decision: the Gateway settles against the served model's listed price, tracks its full ID for judge separation and sends repairs to that model. A dated snapshot can use its registered model family's price when the snapshot has no separate entry. Judge planning also excludes that family when the generator was served by such a snapshot.
+- If the vendor returns a different model with no known price, the Gateway records the reported usage at the requested model's price, flags the discrepancy on the span and raises `PriceMissingError`. The recorded amount is an estimate in this case.
+
+### D-80 Bound PGlite concurrency in verification
+- Status: approved (Phase 1 verification).
+- Decision: run the skeleton's Vitest suite with one worker. The full run under parallel WSL load hit multiple 60-second PGlite setup timeouts. The verbose reporter prints each property name in the verification output.
+
 ## Forward notes for later phases
 
 - Phase 2: `pnpm eval` database selection and JSON results (D-35).

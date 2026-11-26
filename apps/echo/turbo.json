@@ -1,0 +1,8 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": { "inputs": ["$TURBO_DEFAULT$", "product.yaml", "routing.yaml", "evals/**"] },
+    "eval": { "inputs": ["$TURBO_DEFAULT$", "product.yaml", "routing.yaml", "evals/**"] }
+  }
+}

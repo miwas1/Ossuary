@@ -5,6 +5,7 @@ export interface CorpusPrompt {
   id: string;
   system: string;
   turn: string;
+  reference?: string;
 }
 
 const SYSTEM = "You are a careful assistant. Reply with one word.";
@@ -19,5 +20,5 @@ export const TOKEN_CORPUS: readonly CorpusPrompt[] = [
   { id: "digits", system: SYSTEM, turn: toSize("40958372610593847261038475610293847561029384756102938475610 ", 2048) },
   { id: "emoji", system: SYSTEM, turn: toSize("👻💀🦴🕯️🎃🧛‍♂️🧟‍♀️🕸️🦇⚰️🪦👻🎃💀 ", 2048) },
   { id: "base64", system: SYSTEM, turn: toSize("aGVsbG8gd29ybGQ9PXp6eS8rQUJDREVGRzEyMzQ1Njc4OTBxd2VydHl1aW9wYXNkZmdoamts/+Zx9Qw== ", 2048) },
-  { id: "reference", system: SYSTEM, turn: toSize("Section 4.2. A receipt shows the vendor, the date, each line item with its quantity and price, the subtotal, VAT at 7.5 percent and the total. ", 40_960) },
+  { id: "reference", system: SYSTEM, turn: "What kind of document is described in the reference?", reference: toSize("Section 4.2. A receipt shows the vendor, the date, each line item with its quantity and price, the subtotal, VAT at 7.5 percent and the total. ", 40_960) },
 ];

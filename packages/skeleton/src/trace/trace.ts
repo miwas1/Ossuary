@@ -40,6 +40,32 @@ export function dbSpanSink(handle: Pick<DbHandle, "execute">): SpanSink {
   };
 }
 
+/** How many spans bones.spans holds for a trace. */
+export async function countSpans(handle: Pick<DbHandle, "execute">, traceId: string): Promise<number> {
+  const rows = await handle.execute(sql`select count(*)::int as n from bones.spans where trace_id = ${traceId}`);
+  return Number(rows[0]?.n ?? 0);
+}
+
+/** Every stored span of a trace, oldest first. */
+export async function readTrace(handle: Pick<DbHandle, "execute">, traceId: string): Promise<SpanRecord[]> {
+  const rows = await handle.execute(sql`
+    select span_id, trace_id, parent_span_id, task_id, name, start_time, end_time, status_code, status_message, attributes, events
+    from bones.spans where trace_id = ${traceId} order by start_time, span_id`);
+  return rows.map((r) => ({
+    spanId: String(r.span_id),
+    traceId: String(r.trace_id),
+    parentSpanId: (r.parent_span_id as string | null) ?? null,
+    taskId: (r.task_id as string | null) ?? null,
+    name: String(r.name),
+    startTime: new Date(r.start_time as string),
+    endTime: new Date(r.end_time as string),
+    statusCode: r.status_code === "error" ? "error" : "ok",
+    statusMessage: (r.status_message as string | null) ?? null,
+    attributes: (r.attributes ?? {}) as Attributes,
+    events: (r.events ?? []) as unknown[],
+  }));
+}
+
 /** Keeps spans in memory, for tests. */
 export function memorySpanSink(): SpanSink & { spans: SpanRecord[] } {
   const spans: SpanRecord[] = [];
@@ -105,6 +131,7 @@ export class ActiveSpan {
 }
 
 const storage = new AsyncLocalStorage<ActiveSpan>();
+const MESSAGE_ATTRIBUTES = [GEN_AI.systemInstructions, GEN_AI.inputMessages, GEN_AI.outputMessages];
 
 export function newTraceId(): string {
   return randomBytes(16).toString("hex");
@@ -116,11 +143,15 @@ export function currentSpan(): ActiveSpan | undefined {
 
 async function end(s: ActiveSpan): Promise<void> {
   const raw = s.record(s.trace.now());
+  const attributes = s.trace.redact(raw.attributes);
+  for (const key of MESSAGE_ATTRIBUTES) {
+    if (Array.isArray(attributes[key])) attributes[key] = JSON.stringify(attributes[key]);
+  }
   const record: SpanRecord = {
     ...raw,
     name: s.trace.redact(raw.name),
     statusMessage: s.trace.redact(raw.statusMessage),
-    attributes: s.trace.redact(raw.attributes),
+    attributes,
     events: s.trace.redact(raw.events),
   };
   try {

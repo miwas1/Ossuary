@@ -21,7 +21,6 @@ const withSuffix = (segs: Segment[], suffix: string): Segment[] => [...segs, { k
 
 describe("prompt token estimate", () => {
   if (entries.length === 0) {
-    console.log(NOT_CALIBRATED);
     // Feature: 01-skeleton-core, Property P1-5: The estimate is never below a real token count recorded in the fixtures
     it.skip(NOT_CALIBRATED, () => {});
     return;
@@ -32,14 +31,17 @@ describe("prompt token estimate", () => {
 
   // Feature: 01-skeleton-core, Property P1-5: The estimate is never below a real token count recorded in the fixtures
   it("Property P1-5: the estimate never undercounts a recorded count, and more text never lowers it", () => {
+    const prompts = entries.map((entry) => {
+      const prompt = byId.get(entry.corpus_id);
+      if (!prompt) throw new Error(`unknown corpus id ${entry.corpus_id}`);
+      const segments = corpusSegments(prompt);
+      const estimate = promptTokenEstimate(segments);
+      expect(estimate, `${entry.vendor}/${entry.tier}/${entry.corpus_id}`).toBeGreaterThanOrEqual(entry.input_tokens);
+      return { segments, estimate };
+    });
     fc.assert(
-      fc.property(fc.constantFrom(...entries), fc.string({ maxLength: 200, unit: "grapheme" }), (entry, suffix) => {
-        const prompt = byId.get(entry.corpus_id);
-        expect(prompt, `unknown corpus id ${entry.corpus_id}`).toBeDefined();
-        const segs = corpusSegments(prompt!);
-        const estimate = promptTokenEstimate(segs);
-        expect(estimate, `${entry.vendor}/${entry.tier}/${entry.corpus_id}`).toBeGreaterThanOrEqual(entry.input_tokens);
-        expect(promptTokenEstimate(withSuffix(segs, suffix))).toBeGreaterThanOrEqual(estimate);
+      fc.property(fc.constantFrom(...prompts), fc.string({ maxLength: 200, unit: "grapheme" }), ({ segments, estimate }, suffix) => {
+        expect(promptTokenEstimate(withSuffix(segments, suffix))).toBeGreaterThanOrEqual(estimate);
       }),
       { numRuns: Math.max(100, entries.length * 4) },
     );

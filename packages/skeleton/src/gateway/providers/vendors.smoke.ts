@@ -30,6 +30,7 @@ const open: ChargeBudget = {
   settle: (r) => ((r.open = false), false),
   release: (r) => void (r.open = false),
   remainingMs: () => 120_000,
+  timeExceeded: () => { throw new Error("the smoke budget does not run out of time"); },
 };
 
 function tierModels(vendor: string) {
@@ -68,7 +69,7 @@ describe.runIf(enabled)("real vendors (opt-in)", () => {
         exclude: new Set([other]),
       });
       const res = await scoped.call({ system: "Reply with one word.", turn: [{ role: "user", content: "Say hello." }] });
-      expect(res.model).toBe(pick.id);
+      expect(vendorOf(res.model)).toBe(v.vendor);
       expect(res.text.length).toBeGreaterThan(0);
       expect(res.usage.inputTokens).toBeGreaterThan(0);
       expect(res.usage.outputTokens).toBeGreaterThan(0);

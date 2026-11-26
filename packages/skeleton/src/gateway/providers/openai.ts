@@ -60,6 +60,12 @@ interface OpenAiResponse {
 
 /** Pure: OpenAI's input_tokens is already the total; cached_tokens excludes tokens billed as writes. */
 export function readOpenAiResponse(r: OpenAiResponse): ProviderResponse {
+  if (r.status === "incomplete" && r.incomplete_details?.reason === "content_filter") {
+    throw new ProviderError("client", "OpenAI filtered the response");
+  }
+  if (r.status && r.status !== "completed" && !(r.status === "incomplete" && r.incomplete_details?.reason === "max_output_tokens")) {
+    throw new ProviderError("server", "OpenAI did not complete the response");
+  }
   return {
     text: r.output_text,
     model: r.model,
