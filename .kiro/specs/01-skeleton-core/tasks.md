@@ -131,12 +131,12 @@ Ground rules for every task:
     Confirm it never runs under `pnpm verify`.
     - _Requirements: 25.1 to 25.5, 24.6, 24.7, D-71_
 
-- [ ] 9. Harness
-  - [ ] 9.1 Write `src/harness/budget.ts`: caps from `limits`, an injected clock, Active time across restarts, `startStep`, `reserve`, `settle`, `release`, `remainingMs`, `check`, overrun refusal, and the read-only view. Unit-test each cap kind and the overrun path.
+- [x] 9. Harness
+  - [x] 9.1 Write `src/harness/budget.ts`: caps from `limits`, an injected clock, Active time across restarts, `startStep`, `reserve`, `settle`, `release`, `remainingMs`, `check`, overrun refusal, and the read-only view. Unit-test each cap kind and the overrun path.
     - _Requirements: 17.1 to 17.6, 17.8, 13.7, D-53, D-67_
-  - [ ] 9.2 Write `src/harness/task-state.ts`: the Zod `TaskState` schema, and save and load with the JSON round-trip check that raises `TaskStateError`.
+  - [x] 9.2 Write `src/harness/task-state.ts`: the Zod `TaskState` schema, and save and load with the JSON round-trip check that raises `TaskStateError`.
     - _Requirements: 20.2, 20.3, 20.6_
-  - [ ] 9.3 Write `src/harness/define-app.ts` with `defineApp({ dir, pattern, models? })`. It checks, in order:
+  - [x] 9.3 Write `src/harness/define-app.ts` with `defineApp({ dir, pattern, models? })`. It checks, in order:
     - the pattern is built;
     - the pattern matches the Policy;
     - every model Step has a routing entry;
@@ -146,7 +146,7 @@ Ground rules for every task:
 
     It also builds the Run context. Unit-test every rejection.
     - _Requirements: 16.1 to 16.4, 16.6, 18.2, 19.5, 19.6, D-54, D-66_
-  - [ ] 9.4 Write `src/harness/run-task.ts` and `src/harness/pipeline.ts`:
+  - [x] 9.4 Write `src/harness/run-task.ts` and `src/harness/pipeline.ts`:
     - insert the task row;
     - open the root trace;
     - run each Step in a child span;
@@ -156,32 +156,32 @@ Ground rules for every task:
 
     Test on PGlite.
     - _Requirements: 17.7, 18.1, 18.3, 20.1, 20.4, 20.5, 20.6, 23.4, D-52, D-68_
-  - [ ] 9.5 Write `src/harness/generate-evaluate.ts`: rounds, recording the generate Step's Served models and passing them as exclusions to the evaluate Step, the verdict schema, `maxRounds` (default 3, range 1 to 10), and `generate#r` and `evaluate#r` state entries for resume.
+  - [x] 9.5 Write `src/harness/generate-evaluate.ts`: rounds, recording the generate Step's Served models and passing them as exclusions to the evaluate Step, the verdict schema, `maxRounds` (default 3, range 1 to 10), and `generate#r` and `evaluate#r` state entries for resume.
     - _Requirements: 19.1 to 19.4, 19.7_
-  - [ ] 9.6 Property test 2: no task's steps, tokens, Active time or spend ever exceed their caps. A charge that would exceed one stops the task with `BudgetExceeded`, and no vendor request is made for it.
+  - [x] 9.6 Property test 2: no task's steps, tokens, Active time or spend ever exceed their caps. A charge that would exceed one stops the task with `BudgetExceeded`, and no vendor request is made for it.
     - _Requirements: 17.9_
-  - [ ] 9.7 Property test P1-2: no completed evaluate call is served by the same model as its round's generate call.
+  - [x] 9.7 Property test P1-2: no completed evaluate call is served by the same model as its round's generate call.
     - _Requirements: 19.9_
-  - [ ] 9.8 Property test P1-3: task state round-trips unchanged, and a task interrupted after any Step and then resumed matches an uninterrupted run, with no Step run twice.
+  - [x] 9.8 Property test P1-3: task state round-trips unchanged, and a task interrupted after any Step and then resumed matches an uninterrupted run, with no Step run twice.
     - _Requirements: 20.7_
-  - [ ] 9.9 Property test 8: after a task runs on PGlite with a fake that echoes its prompt, no stored span holds a planted email or phone number, as written or with separators stripped.
+  - [x] 9.9 Property test 8: after a task runs on PGlite with a fake that echoes its prompt, no stored span holds a planted email or phone number, as written or with separators stripped.
     - _Requirements: 23.5_
 
-- [ ] 10. Public entry
-  - [ ] 10.1 Fill `src/index.ts` with every export of Requirement 1.1, plus `fakeModelRegister`, `estimateCalibration`, `killPrimary`, `revivePrimary` and `killedVendors` through the gateway object. Add a test that each listed name is exported, and check that `package.json` still exports only `"."` and that `pnpm lint:boundaries` exits 0.
+- [x] 10. Public entry
+  - [x] 10.1 Fill `src/index.ts` with every export of Requirement 1.1, plus `fakeModelRegister`, `estimateCalibration`, `killPrimary`, `revivePrimary` and `killedVendors` through the gateway object. Add a test that each listed name is exported, and check that `package.json` still exports only `"."` and that `pnpm lint:boundaries` exits 0.
     - _Requirements: 1.1 to 1.5, 12.14, D-55, D-64_
 
-- [ ] 11. Echo (`apps/echo`)
-  - [ ] 11.1 Create the package:
+- [x] 11. Echo (`apps/echo`)
+  - [x] 11.1 Create the package:
     - `package.json` (name `echo`; scripts `typecheck`, `lint`, `test` and `task`);
     - `tsconfig.json`;
     - a `turbo.json` like Exhume's;
     - `product.yaml` (GEN-A1-R1) and `routing.yaml` (`generate` on small, `evaluate` on mid with `role: judge`), from the design;
     - `prompts/generate.md` and `prompts/rubric.md`.
     - _Requirements: 26.1, 26.7, D-61_
-  - [ ] 11.2 Write `src/domain/word-limit.ts`, a pure 25-word check with a unit test, and `src/domain/app.ts`, the `generateEvaluate` App definition. A failed word check returns a failing verdict without calling the judge.
+  - [x] 11.2 Write `src/domain/word-limit.ts`, a pure 25-word check with a unit test, and `src/domain/app.ts`, the `generateEvaluate` App definition. A failed word check returns a failing verdict without calling the judge.
     - _Requirements: 26.2, HAR-06_
-  - [ ] 11.3 Write `src/cli.ts` for `task [--fake] [--workspace <id>] "<topic>"`:
+  - [x] 11.3 Write `src/cli.ts` for `task [--fake] [--workspace <id>] "<topic>"`:
     - load `.env`, and exit 1 naming `DATABASE_URL` when it is unset;
     - create the database and migrate it;
     - build the gateway: real adapters, or the fake provider with `fakeModelRegister()` under `--fake`;
@@ -189,17 +189,17 @@ Ground rules for every task:
 
     Test the missing-`DATABASE_URL` exit.
     - _Requirements: 26.3, 26.4, 26.5, D-51_
-  - [ ] 11.4 Write `src/echo.e2e.test.ts` on `pglite://memory` with the fake provider. It checks every point of 26.6.
+  - [x] 11.4 Write `src/echo.e2e.test.ts` on `pglite://memory` with the fake provider. It checks every point of 26.6.
     - _Requirements: 26.6_
 
-- [ ] 12. Verification and close
-  - [ ] 12.1 Run `env -u DATABASE_URL -u ANTHROPIC_API_KEY -u OPENAI_API_KEY pnpm verify` and check that it exits 0. In its output, check for the `P1-5 not calibrated` line and for each property's test name. Check that every property file carries its `// Feature:` comment and runs at least 100 cases.
+- [x] 12. Verification and close
+  - [x] 12.1 Run `env -u DATABASE_URL -u ANTHROPIC_API_KEY -u OPENAI_API_KEY pnpm verify` and check that it exits 0. In its output, check for the `P1-5 not calibrated` line and for each property's test name. Check that every property file carries its `// Feature:` comment and runs at least 100 cases.
     - _Requirements: 24.4, 27.1, 27.2, 27.5, 12.12_
-  - [ ] 12.2 Against your local PostgreSQL, run `pnpm db:migrate`, then `pnpm --filter echo task --fake "a lighthouse keeper"`, then `select name, attributes->>'gen_ai.operation.name' from bones.spans where trace_id = '<printed id>' order by start_time`. Paste the CLI output and the query result into `docs/kiro-log.md`.
+  - [x] 12.2 Against your local PostgreSQL, run `pnpm db:migrate`, then `pnpm --filter echo task --fake "a lighthouse keeper"`, then `select name, attributes->>'gen_ai.operation.name' from bones.spans where trace_id = '<printed id>' order by start_time`. Paste the CLI output and the query result into `docs/kiro-log.md`.
     - _Requirements: 21.5, 26.3, 26.4, exit criterion "trace in local PostgreSQL"_
-  - [ ] 12.3 Only when `.env` holds an API key: check this with `grep -cE '^(ANTHROPIC|OPENAI)_API_KEY=.+' .env`, which shows no values. Then run `OSSUARY_SMOKE=1 pnpm --filter @ossuary/skeleton smoke`, commit the updated `token-counts.json`, rerun `pnpm verify` to see P1-5 run on the recordings, and run `pnpm --filter echo task "a lighthouse keeper"` without `--fake`. With no key, record in `docs/kiro-log.md` that this step was skipped. Calibration is a Phase 4 exit criterion (D-71).
+  - [x] 12.3 Only when `.env` holds an API key: check this with `grep -cE '^(ANTHROPIC|OPENAI)_API_KEY=.+' .env`, which shows no values. Then run `OSSUARY_SMOKE=1 pnpm --filter @ossuary/skeleton smoke`, commit the updated `token-counts.json`, rerun `pnpm verify` to see P1-5 run on the recordings, and run `pnpm --filter echo task "a lighthouse keeper"` without `--fake`. With no key, record in `docs/kiro-log.md` that this step was skipped. Calibration is a Phase 4 exit criterion (D-71). The key check found neither key, so the live run was skipped.
     - _Requirements: 25.1 to 25.4, D-71_
-  - [ ] 12.4 Run `pnpm bones` to refresh the README table. Add the Phase 1 entry to `CHANGELOG.md` (harness added, evals not run, cost per Echo task if 12.3 ran) and the session notes to `docs/kiro-log.md`. Check with `git status --short` that every changed path is one Requirement 27.3 allows, and that no Phase 2 to 5 module was started.
+  - [x] 12.4 Run `pnpm bones` to refresh the README table. Add the Phase 1 entry to `CHANGELOG.md` (harness added, evals not run, cost per Echo task if 12.3 ran) and the session notes to `docs/kiro-log.md`. Check with `git status --short` that every changed path is one Requirement 27.3 allows, and that no Phase 2 to 5 module was started.
     - _Requirements: 27.3, 27.4_
-  - [ ] 12.5 Invoke the `judge` agent to review every acceptance criterion against the code and the test output. Fix each finding before marking Phase 1 done.
+  - [x] 12.5 Invoke the `judge` agent to review every acceptance criterion against the code and the test output. Fix each finding before marking Phase 1 done.
     - _Requirements: all_

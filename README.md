@@ -11,9 +11,10 @@ How much of each app is its own code, next to the shared skeleton. `pnpm bones` 
 <!-- bones:start -->
 | Package | Bone lines | App-specific share |
 | --- | ---: | ---: |
-| @ossuary/skeleton | 93 | — |
-| exhume | 1 | 1% |
-| seance | 1 | 1% |
+| @ossuary/skeleton | 2443 | — |
+| echo | 102 | 4% |
+| exhume | 1 | 0% |
+| seance | 1 | 0% |
 <!-- bones:end -->
 
 ## Quick start
