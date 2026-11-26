@@ -40,6 +40,7 @@ export function createRedactor(env: NodeJS.ProcessEnv = process.env): Redactor {
   const walk = (value: unknown): unknown => {
     if (typeof value === "string") return redactText(value, secrets);
     if (Array.isArray(value)) return value.map(walk);
+    if (value instanceof Date || value instanceof Uint8Array) return value;
     if (value && typeof value === "object") {
       return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, walk(v)]));
     }

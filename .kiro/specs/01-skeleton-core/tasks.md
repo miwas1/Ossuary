@@ -67,8 +67,8 @@ Ground rules for every task:
   - [x] 6.2 Update `src/db/migrate.test.ts`. Replace the "exactly one migration" case with "0000 unchanged, 0001 present", and check that all eight tables exist after migrating, on PGlite and on `TEST_DATABASE_URL`.
     - _Requirements: 21.4_
 
-- [ ] 7. Trace: spans
-  - [ ] 7.1 Write `src/trace/trace.ts`:
+- [x] 7. Trace: spans
+  - [x] 7.1 Write `src/trace/trace.ts`:
     - trace and span IDs;
     - `withTrace` and `span` over `AsyncLocalStorage`;
     - the root span attributes;
